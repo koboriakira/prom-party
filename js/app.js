@@ -19,7 +19,7 @@ if (typeof supabase === 'undefined') {
     const loginButton = document.getElementById('login-button');
     const logoutButton = document.getElementById('logout-button');
     const userInfoDiv = document.getElementById('user-info');
-    
+
     const myTemplatesSection = document.getElementById('my-templates-section');
     const templateEditorSection = document.getElementById('template-editor-section');
     const createNewTemplateButton = document.getElementById('create-new-template-button');
@@ -66,11 +66,11 @@ if (typeof supabase === 'undefined') {
     // --- Authentication Functions ---
     async function updateAuthStatus() {
         if (!_supabase) {
-             console.error("Supabase client not available in updateAuthStatus.");
-             return;
+            console.error("Supabase client not available in updateAuthStatus.");
+            return;
         }
         const { data: { session }, error } = await _supabase.auth.getSession();
-        
+
         hideAllSections(); // Start by hiding all main content sections
 
         if (error) {
@@ -83,22 +83,22 @@ if (typeof supabase === 'undefined') {
             fetchAndDisplayPublicTemplates();
             return;
         }
-        
+
         if (session && session.user) {
             const user = session.user;
             if (userInfoDiv) userInfoDiv.innerHTML = `<p>Logged in as: ${user.email}</p>`;
             if (loginButton) loginButton.style.display = 'none';
             if (logoutButton) logoutButton.style.display = 'inline-block';
-            
-            showMyTemplatesSection(); 
-            if (publicTemplatesSection) publicTemplatesSection.style.display = 'block'; 
+
+            showMyTemplatesSection();
+            if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
             fetchAndDisplayPublicTemplates();
 
         } else { // Not logged in
             if (userInfoDiv) userInfoDiv.innerHTML = '<p>You are not logged in. Browse public templates below or login to create your own.</p>';
             if (loginButton) loginButton.style.display = 'inline-block';
             if (logoutButton) logoutButton.style.display = 'none';
-            
+
             if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
             fetchAndDisplayPublicTemplates();
         }
@@ -132,7 +132,7 @@ if (typeof supabase === 'undefined') {
     async function fetchAndDisplayUserTemplates() {
         if (!templatesListDiv || !_supabase) return;
         templatesListDiv.innerHTML = '<p>Loading templates...</p>';
-        
+
         const { data: { session } } = await _supabase.auth.getSession();
         if (!session || !session.user) {
             templatesListDiv.innerHTML = '<p>Please login to see your templates.</p>';
@@ -153,10 +153,10 @@ if (typeof supabase === 'undefined') {
             renderTemplates(data, userId); // Pass userId for RLS checks in event handlers
         }
     }
-    
+
     function renderTemplates(templatesData, currentUserId) {
         if (!templatesListDiv) return;
-        templatesListDiv.innerHTML = ''; 
+        templatesListDiv.innerHTML = '';
 
         if (!templatesData || templatesData.length === 0) {
             templatesListDiv.innerHTML = '<p>No templates yet. Create one!</p>';
@@ -183,7 +183,7 @@ if (typeof supabase === 'undefined') {
             const descriptionEl = document.createElement('p');
             descriptionEl.textContent = template.description || 'No description.';
             li.appendChild(descriptionEl);
-            
+
             const promptSnippetEl = document.createElement('p');
             promptSnippetEl.className = 'prompt-snippet';
             promptSnippetEl.style.fontFamily = 'monospace';
@@ -209,7 +209,7 @@ if (typeof supabase === 'undefined') {
             deleteButton.style.marginRight = '5px';
             deleteButton.addEventListener('click', () => handleDeleteTemplate(template.id));
             actionsDiv.appendChild(deleteButton);
-            
+
             const useButton = document.createElement('button');
             useButton.textContent = 'Use';
             useButton.setAttribute('data-template-id', template.id);
@@ -221,18 +221,18 @@ if (typeof supabase === 'undefined') {
             const shareContainer = document.createElement('div');
             shareContainer.style.marginTop = '10px';
             shareContainer.style.display = 'inline-block'; // Keep it on same line as buttons if space allows
-            
+
             const shareLabelText = document.createElement('span');
             shareLabelText.textContent = 'Share: ';
             shareContainer.appendChild(shareLabelText);
 
             const shareToggleLabel = document.createElement('label');
             shareToggleLabel.className = 'share-toggle-label';
-            
+
             const shareCheckbox = document.createElement('input');
             shareCheckbox.type = 'checkbox';
             shareCheckbox.checked = template.is_public;
-            
+
             const shareSlider = document.createElement('span');
             shareSlider.className = 'share-slider';
 
@@ -249,7 +249,7 @@ if (typeof supabase === 'undefined') {
                 shareUrlDisplay.textContent = `URL: ${window.location.origin}${window.location.pathname}?template_id=${template.id}`;
             }
             actionsDiv.appendChild(shareUrlDisplay); // Add URL display to actions
-            
+
             shareCheckbox.addEventListener('change', async (event) => {
                 const newIsPublicState = event.target.checked;
                 // currentUserId is passed to renderTemplates from fetchAndDisplayUserTemplates
@@ -267,9 +267,9 @@ if (typeof supabase === 'undefined') {
                 if (updateShareError) {
                     console.error("Error updating sharing status:", updateShareError);
                     alert("Failed to update sharing status: " + updateShareError.message);
-                    event.target.checked = !newIsPublicState; 
+                    event.target.checked = !newIsPublicState;
                 } else {
-                    template.is_public = newIsPublicState; 
+                    template.is_public = newIsPublicState;
                     if (newIsPublicState) {
                         shareUrlDisplay.textContent = `URL: ${window.location.origin}${window.location.pathname}?template_id=${template.id}`;
                         shareUrlDisplay.style.display = 'block';
@@ -279,7 +279,7 @@ if (typeof supabase === 'undefined') {
                     }
                 }
             });
-            
+
             li.appendChild(actionsDiv);
             ul.appendChild(li);
         });
@@ -289,24 +289,24 @@ if (typeof supabase === 'undefined') {
     function showTemplateEditorSection(templateDataToEdit = null) {
         hideAllSections();
         if (templateEditorSection) templateEditorSection.style.display = 'block';
-        
+
         if (templateDataToEdit && currentEditingTemplateId) {
             if (editorHeading) editorHeading.textContent = 'Edit Template';
             if (saveTemplateButton) saveTemplateButton.textContent = 'Update Template';
             // Form population is handled by handleEditTemplate
         } else {
-            currentEditingTemplateId = null; 
+            currentEditingTemplateId = null;
             if (editorHeading) editorHeading.textContent = 'Create New Template';
             if (saveTemplateButton) saveTemplateButton.textContent = 'Save Template';
             if (templateForm) templateForm.reset();
-            
+
             if (fieldsEditorDiv) fieldsEditorDiv.innerHTML = '<p>No fields defined yet. Click "Add Field".</p>';
             if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>No tags yet.</span>';
             if (tagInputElement) tagInputElement.value = '';
         }
         console.log("Showing Template Editor section. Editing ID:", currentEditingTemplateId);
     }
-    
+
     async function handleEditTemplate(templateId) {
         console.log("Editing template ID:", templateId);
         const { data: template, error } = await _supabase
@@ -322,7 +322,7 @@ if (typeof supabase === 'undefined') {
             document.getElementById('template-title').value = template.title;
             document.getElementById('template-description').value = template.description || '';
             document.getElementById('template-prompt').value = template.prompt_template;
-            
+
             // Fetch and render fields
             if (fieldsEditorDiv) fieldsEditorDiv.innerHTML = '<p>Loading fields...</p>';
             const { data: fields, error: fieldsError } = await _supabase
@@ -339,7 +339,7 @@ if (typeof supabase === 'undefined') {
                 if (fields && fields.length > 0) { fields.forEach(field => renderFieldEditorGroup(field)); }
                 else { if (fieldsEditorDiv) fieldsEditorDiv.innerHTML = '<p>No fields defined yet. Click "Add Field".</p>'; }
             }
-            
+
             // Fetch and render tags
             if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>Loading tags...</span>';
             const { data: templateTagLinks, error: ttError } = await _supabase
@@ -355,15 +355,15 @@ if (typeof supabase === 'undefined') {
                 const { data: tagsData, error: tagsError } = await _supabase.from('tags').select('id, name').in('id', tagIds);
                 if (tagsError) { console.error("Error fetching tags:", tagsError); if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>Error loading tags.</span>'; }
                 else if (tagsData) {
-                    if (currentTagsDiv) currentTagsDiv.innerHTML = ''; 
+                    if (currentTagsDiv) currentTagsDiv.innerHTML = '';
                     if (tagsData.length === 0) currentTagsDiv.innerHTML = '<span>No tags yet.</span>';
                     else tagsData.forEach(tag => renderTag(tag.name, true));
                 }
             } else {
                 if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>No tags yet.</span>';
             }
-            
-            showTemplateEditorSection(template); 
+
+            showTemplateEditorSection(template);
         }
     }
 
@@ -423,9 +423,9 @@ if (typeof supabase === 'undefined') {
                 let options = null;
                 if (type === 'select') {
                     const optStr = group.querySelector('.field-options').value.trim();
-                    if (!optStr) { fieldValidationError = true; } else { options = optStr.split(',').map(o => o.trim()).filter(o => o); if(options.length === 0) fieldValidationError = true;}
+                    if (!optStr) { fieldValidationError = true; } else { options = optStr.split(',').map(o => o.trim()).filter(o => o); if (options.length === 0) fieldValidationError = true; }
                 }
-                if(fieldValidationError) return;
+                if (fieldValidationError) return;
                 fieldsToSave.push({ template_id: savedTemplateId, name, label, type, options, sort_order });
             });
 
@@ -475,21 +475,21 @@ if (typeof supabase === 'undefined') {
             showMyTemplatesSection();
         });
     }
-    
+
     // --- Field Editor UI Functions ---
-    function renderFieldEditorGroup(fieldData = null) { 
+    function renderFieldEditorGroup(fieldData = null) {
         if (!fieldsEditorDiv) return null;
         // Clear placeholder only if it exists and we are about to add the first real group
-        if (fieldsEditorDiv.children.length === 1 && fieldsEditorDiv.querySelector('p')) { 
-            fieldsEditorDiv.innerHTML = ''; 
+        if (fieldsEditorDiv.children.length === 1 && fieldsEditorDiv.querySelector('p')) {
+            fieldsEditorDiv.innerHTML = '';
         }
 
-        const fieldGroup = document.createElement('div'); fieldGroup.className = 'field-group'; 
+        const fieldGroup = document.createElement('div'); fieldGroup.className = 'field-group';
         fieldGroup.style.border = '1px solid #ddd'; fieldGroup.style.padding = '10px';
         fieldGroup.style.marginBottom = '10px'; fieldGroup.style.borderRadius = '4px';
-        
+
         const idInput = document.createElement('input'); idInput.type = 'hidden'; idInput.className = 'field-id'; idInput.value = fieldData ? fieldData.id : ''; fieldGroup.appendChild(idInput);
-        
+
         // Sort Order
         const sortOrderDiv = document.createElement('div');
         const sortOrderLabel = document.createElement('label'); sortOrderLabel.textContent = 'Sort Order: ';
@@ -507,7 +507,7 @@ if (typeof supabase === 'undefined') {
         const labelLabelEl = document.createElement('label'); labelLabelEl.textContent = 'Label (UI display): ';
         const labelInputEl = document.createElement('input'); labelInputEl.type = 'text'; labelInputEl.className = 'field-label'; labelInputEl.required = true; labelInputEl.value = fieldData ? fieldData.label : '';
         labelLabelEl.appendChild(labelInputEl); labelDiv.appendChild(labelLabelEl); fieldGroup.appendChild(labelDiv);
-        
+
         // Type
         const typeDiv = document.createElement('div');
         const typeLabel = document.createElement('label'); typeLabel.textContent = 'Type: ';
@@ -537,32 +537,32 @@ if (typeof supabase === 'undefined') {
         const removeButton = document.createElement('button'); removeButton.type = 'button'; removeButton.textContent = 'Remove Field'; removeButton.style.marginTop = '5px';
         removeButton.addEventListener('click', () => { fieldGroup.remove(); if (fieldsEditorDiv.children.length === 0) fieldsEditorDiv.innerHTML = '<p>No fields defined yet.</p>'; });
         fieldGroup.appendChild(removeButton);
-        
+
         fieldsEditorDiv.appendChild(fieldGroup); return fieldGroup;
-    } 
-    
+    }
+
     if (addFieldButton) { addFieldButton.addEventListener('click', () => renderFieldEditorGroup()); }
 
     // --- Tag Editor UI Functions ---
-    function renderTag(tagName, isExisting = false) { 
+    function renderTag(tagName, isExisting = false) {
         if (!currentTagsDiv) return;
         const noTagsMsg = currentTagsDiv.querySelector('span'); if (noTagsMsg && noTagsMsg.textContent.includes('No tags')) currentTagsDiv.innerHTML = '';
         const existingSpans = currentTagsDiv.querySelectorAll('.tag-display span');
         for (let span of existingSpans) {
             if (span.textContent.toLowerCase() === tagName.toLowerCase()) {
-                 if(tagInputElement) tagInputElement.value = ''; return;
+                if (tagInputElement) tagInputElement.value = ''; return;
             }
         }
-        const display = document.createElement('div'); display.className = 'tag-display'; display.setAttribute('data-tag-name', tagName); 
+        const display = document.createElement('div'); display.className = 'tag-display'; display.setAttribute('data-tag-name', tagName);
         display.style.display = 'inline-flex'; display.style.alignItems = 'center'; display.style.backgroundColor = '#e0e0e0';
         display.style.padding = '3px 8px'; display.style.marginRight = '5px'; display.style.marginBottom = '5px'; display.style.borderRadius = '4px';
         const nameSpan = document.createElement('span'); nameSpan.textContent = tagName; display.appendChild(nameSpan);
-        const removeBtn = document.createElement('button'); removeBtn.textContent = 'x'; 
+        const removeBtn = document.createElement('button'); removeBtn.textContent = 'x';
         removeBtn.style.marginLeft = '5px'; removeBtn.style.border = 'none'; removeBtn.style.background = 'none';
         removeBtn.style.cursor = 'pointer'; removeBtn.style.fontSize = '14px'; removeBtn.style.padding = '0 5px';
         removeBtn.addEventListener('click', () => { display.remove(); if (currentTagsDiv.children.length === 0) currentTagsDiv.innerHTML = '<span>No tags yet.</span>'; });
         display.appendChild(removeBtn); currentTagsDiv.appendChild(display);
-    } 
+    }
 
     if (addTagButton) { addTagButton.addEventListener('click', () => { if (tagInputElement) { const name = tagInputElement.value.trim(); if (name) { renderTag(name); tagInputElement.value = ''; } } }); }
     if (tagInputElement) { tagInputElement.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); addTagButton.click(); } }); }
@@ -573,7 +573,7 @@ if (typeof supabase === 'undefined') {
         if (promptGenerationSection) promptGenerationSection.style.display = 'block';
     }
 
-    function renderGenerationField(field) { 
+    function renderGenerationField(field) {
         const container = document.createElement('div'); container.style.marginBottom = '10px';
         const label = document.createElement('label'); label.textContent = field.label + ': '; label.style.display = 'block'; container.appendChild(label);
         let input;
@@ -584,80 +584,80 @@ if (typeof supabase === 'undefined') {
         input.id = `gen-field-${field.name}`; input.className = 'generation-input-field'; input.setAttribute('data-field-name', field.name);
         input.addEventListener('input', regenerateDynamicPrompt); input.addEventListener('change', regenerateDynamicPrompt);
         container.appendChild(input); return container;
-    } 
+    }
 
-    async function handleUseTemplate(templateId) { 
+    async function handleUseTemplate(templateId) {
         console.log("Using template ID:", templateId);
         const { data: t, error: tE } = await _supabase.from('templates').select('*').eq('id', templateId).single();
         if (tE) { console.error("Err fetch template for gen:", tE); alert("Could not load template: " + tE.message); return; }
         const { data: f, error: fE } = await _supabase.from('fields').select('*').eq('template_id', templateId).order('sort_order');
         if (fE) { console.error("Err fetch fields for gen:", fE); alert("Could not load fields: " + fE.message); return; }
         currentGenerationTemplateData = { prompt_template: t.prompt_template, fields: f || [], template_title: t.title, template_description: t.description };
-        if(generationTemplateInfoDiv) generationTemplateInfoDiv.innerHTML = `<h3>${t.title}</h3><p>${t.description||''}</p>`;
-        if(generationFieldsFormDiv) { generationFieldsFormDiv.innerHTML = ''; if(f && f.length > 0) f.forEach(field => generationFieldsFormDiv.appendChild(renderGenerationField(field))); else generationFieldsFormDiv.innerHTML = '<p>No input fields.</p>';}
-        if(generatedPromptOutputTextarea) generatedPromptOutputTextarea.value = '';
+        if (generationTemplateInfoDiv) generationTemplateInfoDiv.innerHTML = `<h3>${t.title}</h3><p>${t.description || ''}</p>`;
+        if (generationFieldsFormDiv) { generationFieldsFormDiv.innerHTML = ''; if (f && f.length > 0) f.forEach(field => generationFieldsFormDiv.appendChild(renderGenerationField(field))); else generationFieldsFormDiv.innerHTML = '<p>No input fields.</p>'; }
+        if (generatedPromptOutputTextarea) generatedPromptOutputTextarea.value = '';
         regenerateDynamicPrompt(); showPromptGenerationSection();
     }
 
-    function regenerateDynamicPrompt() { 
+    function regenerateDynamicPrompt() {
         if (!generatedPromptOutputTextarea || !currentGenerationTemplateData) return;
         let promptText = currentGenerationTemplateData.prompt_template || '';
         currentGenerationTemplateData.fields.forEach(field => {
             const inputEl = document.getElementById(`gen-field-${field.name}`);
             if (inputEl) {
                 let val = '';
-                if (inputEl.type === 'checkbox') { if (inputEl.checked) val = inputEl.value || field.label; } 
+                if (inputEl.type === 'checkbox') { if (inputEl.checked) val = inputEl.value || field.label; }
                 else { val = inputEl.value; }
                 if (val) { const regex = new RegExp(`\{\{\s*${field.name}\s*\}\}`, 'g'); promptText = promptText.replace(regex, val); }
             }
         });
-        promptText = promptText.replace(/\{\{\s*[^}]+\s*\}\}/g, '[...]'); 
+        promptText = promptText.replace(/\{\{\s*[^}]+\s*\}\}/g, '[...]');
         generatedPromptOutputTextarea.value = promptText;
     }
 
-    if (copyPromptButton) { 
+    if (copyPromptButton) {
         copyPromptButton.addEventListener('click', async () => {
-            if(!generatedPromptOutputTextarea) return; const text = generatedPromptOutputTextarea.value; if(!text){alert("Nothing to copy"); return;}
-            if(navigator.clipboard && navigator.clipboard.writeText){ try { await navigator.clipboard.writeText(text); copyPromptButton.textContent='Copied!'; setTimeout(()=>copyPromptButton.textContent='Copy Prompt',2000);} catch(err){console.error("Fail copy",err);alert("Fail copy");}}
-            else { try {generatedPromptOutputTextarea.select(); document.execCommand('copy'); generatedPromptOutputTextarea.blur(); copyPromptButton.textContent='Copied!'; setTimeout(()=>copyPromptButton.textContent='Copy Prompt',2000);} catch(err){alert("Fail copy (fallback)");}}
+            if (!generatedPromptOutputTextarea) return; const text = generatedPromptOutputTextarea.value; if (!text) { alert("Nothing to copy"); return; }
+            if (navigator.clipboard && navigator.clipboard.writeText) { try { await navigator.clipboard.writeText(text); copyPromptButton.textContent = 'Copied!'; setTimeout(() => copyPromptButton.textContent = 'Copy Prompt', 2000); } catch (err) { console.error("Fail copy", err); alert("Fail copy"); } }
+            else { try { generatedPromptOutputTextarea.select(); document.execCommand('copy'); generatedPromptOutputTextarea.blur(); copyPromptButton.textContent = 'Copied!'; setTimeout(() => copyPromptButton.textContent = 'Copy Prompt', 2000); } catch (err) { alert("Fail copy (fallback)"); } }
         });
     }
     if (backToMyTemplatesButton) { backToMyTemplatesButton.addEventListener('click', showMyTemplatesSection); }
 
     // --- Public Templates & URL Loading ---
-    function renderPublicTemplates(templatesData) { 
-        if(!publicTemplatesListDiv) return; publicTemplatesListDiv.innerHTML = '';
-        if(!templatesData || templatesData.length === 0){ publicTemplatesListDiv.innerHTML = '<p>No public templates.</p>'; return;}
-        const ul = document.createElement('ul'); ul.style.listStyleType='none'; ul.style.padding='0';
+    function renderPublicTemplates(templatesData) {
+        if (!publicTemplatesListDiv) return; publicTemplatesListDiv.innerHTML = '';
+        if (!templatesData || templatesData.length === 0) { publicTemplatesListDiv.innerHTML = '<p>No public templates.</p>'; return; }
+        const ul = document.createElement('ul'); ul.style.listStyleType = 'none'; ul.style.padding = '0';
         templatesData.forEach(t => {
-            const li = document.createElement('li'); /* styles */ li.style.border='1px solid #eee'; li.style.padding='10px'; li.style.marginBottom='10px';
+            const li = document.createElement('li'); /* styles */ li.style.border = '1px solid #eee'; li.style.padding = '10px'; li.style.marginBottom = '10px';
             const h4 = document.createElement('h4'); h4.textContent = t.title; li.appendChild(h4);
             const p = document.createElement('p'); p.textContent = t.description || 'No desc.'; li.appendChild(p);
             // Later: author, tags.
-            const btn = document.createElement('button'); btn.textContent='View & Use'; btn.setAttribute('data-template-id', t.id);
+            const btn = document.createElement('button'); btn.textContent = 'View & Use'; btn.setAttribute('data-template-id', t.id);
             btn.addEventListener('click', () => handleUseTemplate(t.id)); // handleUseTemplate should work for public ones too
             li.appendChild(btn); ul.appendChild(li);
         });
         publicTemplatesListDiv.appendChild(ul);
     }
 
-    async function fetchAndDisplayPublicTemplates() { 
-        if(!publicTemplatesListDiv || !_supabase) return; publicTemplatesListDiv.innerHTML = '<p>Loading public templates...</p>';
-        const {data, error} = await _supabase.from('templates').select('id,title,description,user_id').eq('is_public',true).order('created_at',{ascending:false});
-        if(error){console.error("Err fetch public:", error); publicTemplatesListDiv.innerHTML='<p>Err load public.</p>';}
-        else{renderPublicTemplates(data);}
+    async function fetchAndDisplayPublicTemplates() {
+        if (!publicTemplatesListDiv || !_supabase) return; publicTemplatesListDiv.innerHTML = '<p>Loading public templates...</p>';
+        const { data, error } = await _supabase.from('templates').select('id,title,description,user_id').eq('is_public', true).order('created_at', { ascending: false });
+        if (error) { console.error("Err fetch public:", error); publicTemplatesListDiv.innerHTML = '<p>Err load public.</p>'; }
+        else { renderPublicTemplates(data); }
     }
 
-    async function loadTemplateFromUrl() { 
+    async function loadTemplateFromUrl() {
         const params = new URLSearchParams(window.location.search); const id = params.get('template_id');
-        if(id){
+        if (id) {
             console.log("Loading template from URL ID:", id);
-            hideAllSections(); 
-            const {data:t, error:err} = await _supabase.from('templates').select('*').eq('id',id).single();
-            if(err && err.code !== 'PGRST116'){ console.error("Err fetch URL ID",err); alert("Err load from URL."); return false;}
-            if(t && t.is_public){ await handleUseTemplate(t.id); return true; }
-            else if(t && !t.is_public){ alert("Template not public."); window.history.replaceState({},document.title,window.location.pathname); return false;}
-            else{ alert("Template not found."); window.history.replaceState({},document.title,window.location.pathname); return false;}
+            hideAllSections();
+            const { data: t, error: err } = await _supabase.from('templates').select('*').eq('id', id).single();
+            if (err && err.code !== 'PGRST116') { console.error("Err fetch URL ID", err); alert("Err load from URL."); return false; }
+            if (t && t.is_public) { await handleUseTemplate(t.id); return true; }
+            else if (t && !t.is_public) { alert("Template not public."); window.history.replaceState({}, document.title, window.location.pathname); return false; }
+            else { alert("Template not found."); window.history.replaceState({}, document.title, window.location.pathname); return false; }
         }
         return false;
     }
@@ -671,9 +671,9 @@ if (typeof supabase === 'undefined') {
         // However, loadTemplateFromUrl is now called first in the IIFE below,
         // and updateAuthStatus is only called if a template wasn't loaded via URL.
         // So, this should be fine for subsequent auth changes (sign in/out after initial load).
-        await updateAuthStatus(); 
+        await updateAuthStatus();
     });
-    
+
     // Initial page load execution
     (async () => {
         if (!_supabase) {
@@ -686,7 +686,7 @@ if (typeof supabase === 'undefined') {
             // updateAuthStatus will be called by onAuthStateChange for the INITIAL_SESSION event if not already.
             // However, to ensure view updates correctly if INITIAL_SESSION already fired or is slow,
             // explicitly call updateAuthStatus if no URL template is dictating the view.
-            await updateAuthStatus(); 
+            await updateAuthStatus();
         }
         // If templateViaUrlLoaded is true, the specific template view is already set.
         // onAuthStateChange will still fire and update user-specific elements if any.
@@ -705,44 +705,4 @@ if (typeof supabase === 'undefined') {
         });
     }
 
-} // End of Supabase client loaded blockThe entire content of `js/app.js` has been successfully overwritten with the provided code, which includes all previously implemented features and the new logic for displaying public templates and handling direct URL access.
-
-**Summary of changes included in the overwritten `js/app.js`:**
-
-1.  **DOM References**:
-    *   Added `publicTemplatesSection` and `publicTemplatesListDiv`.
-
-2.  **New Functions for Public Templates & URL Loading**:
-    *   `renderPublicTemplates(templatesData)`: Renders the list of public templates.
-    *   `fetchAndDisplayPublicTemplates()`: Fetches public templates from Supabase and calls `renderPublicTemplates`.
-    *   `loadTemplateFromUrl()`:
-        *   Checks for a `template_id` in the URL query parameters.
-        *   If found, attempts to fetch the template from Supabase.
-        *   If the template is public, it calls `handleUseTemplate()` to display it in the generation view.
-        *   Handles errors like template not found or not public by alerting the user and clearing the URL parameter.
-        *   Returns `true` if a template was loaded, `false` otherwise.
-
-3.  **Section Visibility Logic**:
-    *   `hideAllSections()`: A utility function to hide all main content sections.
-    *   `showMyTemplatesSection()`, `showTemplateEditorSection()`, `showPromptGenerationSection()`: Updated to call `hideAllSections()` first, ensuring only one section is visible.
-    *   `updateAuthStatus()`:
-        *   Calls `hideAllSections()` at the beginning.
-        *   If a user is logged in, it calls `showMyTemplatesSection()` and then also makes `publicTemplatesSection` visible and calls `fetchAndDisplayPublicTemplates()`.
-        *   If no user is logged in, it only makes `publicTemplatesSection` visible and calls `fetchAndDisplayPublicTemplates()`.
-        *   Handles errors during session retrieval by also attempting to show public templates.
-
-4.  **Initial Page Load Logic**:
-    *   An Immediately Invoked Function Expression (IIFE) `(async () => { ... })();` is now used for the initial page load.
-    *   It first calls `loadTemplateFromUrl()`.
-    *   If `loadTemplateFromUrl()` returns `true` (meaning a template was loaded and displayed), `updateAuthStatus()` is not immediately called, allowing the direct-linked template to remain in view. `onAuthStateChange` will still update user-specific elements.
-    *   If `loadTemplateFromUrl()` returns `false` (no template ID in URL, or template not found/not public), then `updateAuthStatus()` is called to display the default view (My Templates for logged-in users, or Public Templates for logged-out users).
-    *   Includes a fallback for when `_supabase` might not be initialized immediately.
-
-5.  **`onAuthStateChange` Handler**:
-    *   The `onAuthStateChange` listener now simply calls `updateAuthStatus()` for any auth event (SIGNED_IN, SIGNED_OUT, INITIAL_SESSION if not handled by the IIFE). This simplifies the logic, as `updateAuthStatus` and the IIFE now correctly manage the view based on URL parameters and login state.
-
-6.  **Consolidated and Refined Code**:
-    *   The provided code is a complete, self-contained script for `js/app.js`, implying that all previous placeholder comments like `/* ... content from previous successful subtask ... */` have been filled with their full working implementations. This includes all CRUD operations for templates, fields, and tags, as well as the dynamic prompt generation and copy-to-clipboard features.
-    *   Helper functions and event listeners for various UI elements (buttons, inputs, etc.) are included.
-
-This overwrite ensures that `js/app.js` is up-to-date with all specified features, including the new public templates functionality and URL-based loading.
+}
