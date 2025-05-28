@@ -64,34 +64,71 @@ if (typeof supabase === 'undefined') {
     }
 
     // --- Authentication Functions ---
-    async function updateAuthStatus() {
+    async function updateAuthStatus(sessionFromEvent) {
         if (!_supabase) {
             console.error("Supabase client not available in updateAuthStatus.");
             return;
         }
-        const { data: { session }, error } = await _supabase.auth.getSession();
+
+        let sessionToUse = sessionFromEvent;
+        let errorGettingSession;
+
+        if (!sessionToUse) {
+            const { data: { session }, error } = await _supabase.auth.getSession();
+            sessionToUse = session;
+            errorGettingSession = error;
+        }
 
         hideAllSections(); // Start by hiding all main content sections
 
-        if (error) {
-            console.error("Error getting session:", error.message);
+        if (errorGettingSession) {
+            console.error("Error getting session:", errorGettingSession.message);
             if (userInfoDiv) userInfoDiv.innerHTML = `<p>Error checking auth status.</p>`;
             if (loginButton) loginButton.style.display = 'inline-block';
             if (logoutButton) logoutButton.style.display = 'none';
-            // Show public templates by default on error as well, or a generic error message.
             if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
-            fetchAndDisplayPublicTemplates();
+            fetchAndDisplayPublicTemplates(); // Show public templates even on auth error
             return;
         }
 
-        if (session && session.user) {
-            const user = session.user;
+        const params = new URLSearchParams(window.location.search);
+        const templateIdFromUrl = params.get('template_id');
+
+        if (sessionToUse && sessionToUse.user) {
+            const user = sessionToUse.user;
             if (userInfoDiv) userInfoDiv.innerHTML = `<p>Logged in as: ${user.email}</p>`;
             if (loginButton) loginButton.style.display = 'none';
             if (logoutButton) logoutButton.style.display = 'inline-block';
 
-            showMyTemplatesSection();
-            if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
+            if (templateIdFromUrl) {
+                const { data: template, error: templateError } = await _supabase
+                    .from('templates')
+                    .select('*')
+                    .eq('id', templateIdFromUrl)
+                    .single();
+
+                if (templateError) {
+                    console.error('Error fetching template from URL (logged in):', templateError);
+                    alert('Error loading template from URL. It might have been removed or the link is incorrect.');
+                    window.history.replaceState({}, document.title, window.location.pathname); // Clear URL
+                    showMyTemplatesSection();
+                } else if (template) {
+                    if (template.is_public || template.user_id === user.id) {
+                        await handleUseTemplate(template.id);
+                    } else {
+                        alert('This template is not public and does not belong to you.');
+                        window.history.replaceState({}, document.title, window.location.pathname); // Clear URL
+                        showMyTemplatesSection();
+                    }
+                } else { // Template not found
+                    alert('Template not found from URL.');
+                    window.history.replaceState({}, document.title, window.location.pathname); // Clear URL
+                    showMyTemplatesSection();
+                }
+            } else {
+                showMyTemplatesSection();
+            }
+            if (publicTemplatesSection) publicTemplatesSection.style.display = 'block'; // Ensure it's visible for logged-in users
             fetchAndDisplayPublicTemplates();
 
         } else { // Not logged in
@@ -99,10 +136,82 @@ if (typeof supabase === 'undefined') {
             if (loginButton) loginButton.style.display = 'inline-block';
             if (logoutButton) logoutButton.style.display = 'none';
 
-            if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
-            fetchAndDisplayPublicTemplates();
+            // If there's a template_id in URL and user is not logged in,
+            // loadPublicTemplateFromUrl would have been called by the IIFE.
+            // If it succeeded, the template view is already set.
+            // If it failed, or no template_id, show default public view.
+            // This ensures that if a user logs out while viewing a public template via URL, they still see it.
+            let publicTemplateLoaded = false;
+            if (templateIdFromUrl) {
+                 // We don't call loadPublicTemplateFromUrl here again, as IIFE handles initial load.
+                 // If user logs out, onAuthStateChange triggers updateAuthStatus.
+                 // If a public template was being viewed, we want to keep it.
+                 // Check if the current view is already the prompt generation section for that template.
+                 // This is a bit of a simplification; ideally, we'd have a more robust state check.
+                if (promptGenerationSection && promptGenerationSection.style.display === 'block' &&
+                    currentGenerationTemplateData && currentGenerationTemplateData.id === templateIdFromUrl && currentGenerationTemplateData.is_public) {
+                    publicTemplateLoaded = true; // Assume it's the one from URL
+                }
+            }
+
+            if (!publicTemplateLoaded) {
+                 if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
+            }
+            fetchAndDisplayPublicTemplates(); // Always fetch public templates
         }
     }
+
+
+    async function loadPublicTemplateFromUrl(templateId) {
+        if (!_supabase) {
+            console.error("Supabase client not available in loadPublicTemplateFromUrl.");
+            return false;
+        }
+        console.log("loadPublicTemplateFromUrl called for template ID:", templateId);
+        hideAllSections(); // Hide sections before loading specific template
+
+        const { data: template, error: err } = await _supabase
+            .from('templates')
+            .select('*')
+            .eq('id', templateId)
+            .single();
+
+        if (err) {
+            console.error("Error fetching template by ID for public view:", err);
+            alert("Could not load the template. It might have been removed or the link is incorrect.");
+            window.history.replaceState({}, document.title, window.location.pathname);
+            // Show public templates section as a fallback
+            if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
+            fetchAndDisplayPublicTemplates();
+            return false;
+        }
+
+        if (template) {
+            if (template.is_public) {
+                await handleUseTemplate(template.id); // This function already shows the promptGenerationSection
+                // Add template.id and is_public to currentGenerationTemplateData for later checks
+                if (currentGenerationTemplateData) {
+                    currentGenerationTemplateData.id = template.id;
+                    currentGenerationTemplateData.is_public = template.is_public;
+                }
+                return true;
+            } else {
+                alert("This template is not public. Please log in if you are the owner.");
+                // Do not clear URL here, user might want to log in to access it.
+                // Show public templates section as a fallback
+                if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
+                fetchAndDisplayPublicTemplates();
+                return false;
+            }
+        } else {
+            alert("Template not found.");
+            window.history.replaceState({}, document.title, window.location.pathname);
+            if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
+            fetchAndDisplayPublicTemplates();
+            return false;
+        }
+    }
+
 
     if (loginButton) {
         loginButton.addEventListener('click', async () => {
@@ -118,6 +227,9 @@ if (typeof supabase === 'undefined') {
             const { error } = await _supabase.auth.signOut();
             if (error) console.error('Error logging out:', error.message);
             // onAuthStateChange will handle UI update by calling updateAuthStatus
+            // Clearing currentGenerationTemplateData on logout is important if user was viewing a private template
+            currentGenerationTemplateData = { prompt_template: '', fields: [], template_title: '', template_description: '', id: null, is_public: false };
+
         });
     }
 
@@ -592,11 +704,21 @@ if (typeof supabase === 'undefined') {
         if (tE) { console.error("Err fetch template for gen:", tE); alert("Could not load template: " + tE.message); return; }
         const { data: f, error: fE } = await _supabase.from('fields').select('*').eq('template_id', templateId).order('sort_order');
         if (fE) { console.error("Err fetch fields for gen:", fE); alert("Could not load fields: " + fE.message); return; }
-        currentGenerationTemplateData = { prompt_template: t.prompt_template, fields: f || [], template_title: t.title, template_description: t.description };
+        
+        currentGenerationTemplateData = { 
+            prompt_template: t.prompt_template, 
+            fields: f || [], 
+            template_title: t.title, 
+            template_description: t.description,
+            id: t.id, // Store id and is_public for state checking
+            is_public: t.is_public
+        };
+
         if (generationTemplateInfoDiv) generationTemplateInfoDiv.innerHTML = `<h3>${t.title}</h3><p>${t.description || ''}</p>`;
         if (generationFieldsFormDiv) { generationFieldsFormDiv.innerHTML = ''; if (f && f.length > 0) f.forEach(field => generationFieldsFormDiv.appendChild(renderGenerationField(field))); else generationFieldsFormDiv.innerHTML = '<p>No input fields.</p>'; }
         if (generatedPromptOutputTextarea) generatedPromptOutputTextarea.value = '';
-        regenerateDynamicPrompt(); showPromptGenerationSection();
+        regenerateDynamicPrompt(); 
+        showPromptGenerationSection();
     }
 
     function regenerateDynamicPrompt() {
@@ -622,56 +744,60 @@ if (typeof supabase === 'undefined') {
             else { try { generatedPromptOutputTextarea.select(); document.execCommand('copy'); generatedPromptOutputTextarea.blur(); copyPromptButton.textContent = 'Copied!'; setTimeout(() => copyPromptButton.textContent = 'Copy Prompt', 2000); } catch (err) { alert("Fail copy (fallback)"); } }
         });
     }
-    if (backToMyTemplatesButton) { backToMyTemplatesButton.addEventListener('click', showMyTemplatesSection); }
+    if (backToMyTemplatesButton) { 
+        backToMyTemplatesButton.addEventListener('click', async () => {
+            // Determine if user is logged in to decide which section to show
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (session && session.user) {
+                showMyTemplatesSection();
+            } else {
+                // If not logged in, and they clicked "back", they were likely viewing a public template.
+                // Show the public templates list.
+                hideAllSections();
+                if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
+                fetchAndDisplayPublicTemplates(); // Ensure public templates are visible
+            }
+        });
+    }
 
-    // --- Public Templates & URL Loading ---
+    // --- Public Templates Display Functions ---
     function renderPublicTemplates(templatesData) {
         if (!publicTemplatesListDiv) return; publicTemplatesListDiv.innerHTML = '';
-        if (!templatesData || templatesData.length === 0) { publicTemplatesListDiv.innerHTML = '<p>No public templates.</p>'; return; }
+        if (!templatesData || templatesData.length === 0) { publicTemplatesListDiv.innerHTML = '<p>No public templates available at the moment.</p>'; return; }
         const ul = document.createElement('ul'); ul.style.listStyleType = 'none'; ul.style.padding = '0';
         templatesData.forEach(t => {
-            const li = document.createElement('li'); /* styles */ li.style.border = '1px solid #eee'; li.style.padding = '10px'; li.style.marginBottom = '10px';
+            const li = document.createElement('li'); li.style.border = '1px solid #eee'; li.style.padding = '10px'; li.style.marginBottom = '10px';
             const h4 = document.createElement('h4'); h4.textContent = t.title; li.appendChild(h4);
-            const p = document.createElement('p'); p.textContent = t.description || 'No desc.'; li.appendChild(p);
+            const p = document.createElement('p'); p.textContent = t.description || 'No description.'; li.appendChild(p);
             // Later: author, tags.
             const btn = document.createElement('button'); btn.textContent = 'View & Use'; btn.setAttribute('data-template-id', t.id);
-            btn.addEventListener('click', () => handleUseTemplate(t.id)); // handleUseTemplate should work for public ones too
+            btn.addEventListener('click', () => handleUseTemplate(t.id)); 
             li.appendChild(btn); ul.appendChild(li);
         });
         publicTemplatesListDiv.appendChild(ul);
     }
 
     async function fetchAndDisplayPublicTemplates() {
-        if (!publicTemplatesListDiv || !_supabase) return; publicTemplatesListDiv.innerHTML = '<p>Loading public templates...</p>';
-        const { data, error } = await _supabase.from('templates').select('id,title,description,user_id').eq('is_public', true).order('created_at', { ascending: false });
-        if (error) { console.error("Err fetch public:", error); publicTemplatesListDiv.innerHTML = '<p>Err load public.</p>'; }
-        else { renderPublicTemplates(data); }
-    }
-
-    async function loadTemplateFromUrl() {
-        const params = new URLSearchParams(window.location.search); const id = params.get('template_id');
-        if (id) {
-            console.log("Loading template from URL ID:", id);
-            hideAllSections();
-            const { data: t, error: err } = await _supabase.from('templates').select('*').eq('id', id).single();
-            if (err && err.code !== 'PGRST116') { console.error("Err fetch URL ID", err); alert("Err load from URL."); return false; }
-            if (t && t.is_public) { await handleUseTemplate(t.id); return true; }
-            else if (t && !t.is_public) { alert("Template not public."); window.history.replaceState({}, document.title, window.location.pathname); return false; }
-            else { alert("Template not found."); window.history.replaceState({}, document.title, window.location.pathname); return false; }
+        if (!publicTemplatesListDiv || !_supabase) return; 
+        // Avoid multiple "Loading..." messages if already loading or content is present
+        if (!publicTemplatesListDiv.innerHTML || publicTemplatesListDiv.innerHTML.includes('<p>Loading public templates...</p>')) {
+             publicTemplatesListDiv.innerHTML = '<p>Loading public templates...</p>';
         }
-        return false;
+
+        const { data, error } = await _supabase.from('templates').select('id,title,description,user_id,is_public').eq('is_public', true).order('created_at', { ascending: false });
+        if (error) { 
+            console.error("Error fetching public templates:", error); 
+            if (publicTemplatesListDiv.innerHTML.includes('<p>Loading public templates...</p>')) { // Only overwrite if still loading
+                 publicTemplatesListDiv.innerHTML = '<p>Error loading public templates. Please try again later.</p>'; 
+            }
+        }
+        else { renderPublicTemplates(data); }
     }
 
     // --- Initial Load & Auth State Change Handler ---
     _supabase.auth.onAuthStateChange(async (event, session) => {
         console.log("Auth event:", event, "Session:", session);
-        // This will be called on INITIAL_SESSION, SIGNED_IN, SIGNED_OUT, etc.
-        // For INITIAL_SESSION, if loadTemplateFromUrl has already run and shown a template,
-        // this updateAuthStatus call might override that view if not handled carefully.
-        // However, loadTemplateFromUrl is now called first in the IIFE below,
-        // and updateAuthStatus is only called if a template wasn't loaded via URL.
-        // So, this should be fine for subsequent auth changes (sign in/out after initial load).
-        await updateAuthStatus();
+        await updateAuthStatus(session);
     });
 
     // Initial page load execution
@@ -680,29 +806,51 @@ if (typeof supabase === 'undefined') {
             console.error("Supabase client not initialized at initial page load. Cannot proceed.");
             return;
         }
-        const templateViaUrlLoaded = await loadTemplateFromUrl();
-        if (!templateViaUrlLoaded) {
-            // If no template loaded from URL, proceed with normal auth status check and default view.
-            // updateAuthStatus will be called by onAuthStateChange for the INITIAL_SESSION event if not already.
-            // However, to ensure view updates correctly if INITIAL_SESSION already fired or is slow,
-            // explicitly call updateAuthStatus if no URL template is dictating the view.
-            await updateAuthStatus();
+        const params = new URLSearchParams(window.location.search);
+        const templateIdFromUrl = params.get('template_id');
+
+        if (templateIdFromUrl) {
+            // Quickly check if a session exists.
+            // This helps in scenarios where onAuthStateChange might be delayed or already fired.
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session || !session.user) {
+                // No active session, try to load as public template.
+                // updateAuthStatus (triggered by onAuthStateChange or if already run for INITIAL_SESSION)
+                // will handle showing public templates section if this fails.
+                await loadPublicTemplateFromUrl(templateIdFromUrl);
+            }
+            // If session exists, updateAuthStatus (called by onAuthStateChange)
+            // will handle the template_id from URL for logged-in user.
+        } else {
+            // No template_id in URL.
+            // Call updateAuthStatus manually if onAuthStateChange hasn't fired yet for INITIAL_SESSION.
+            // This ensures the UI (like public templates) is populated on initial load
+            // especially if there's no interaction triggering onAuthStateChange immediately.
+            // We get the session first to avoid redundant calls if updateAuthStatus is also called by onAuthStateChange.
+            const { data: { session } } = await _supabase.auth.getSession();
+            await updateAuthStatus(session); // updateAuthStatus can handle null session
         }
-        // If templateViaUrlLoaded is true, the specific template view is already set.
-        // onAuthStateChange will still fire and update user-specific elements if any.
     })();
 
     // Event listeners for global buttons
     if (createNewTemplateButton) {
         createNewTemplateButton.addEventListener('click', () => {
+            currentEditingTemplateId = null; // Ensure it's a new template
             showTemplateEditorSection(); // Pass no arg for new template
         });
     }
     if (cancelEditButton) {
-        cancelEditButton.addEventListener('click', () => {
+        cancelEditButton.addEventListener('click', async () => {
             currentEditingTemplateId = null; // Clear editing state
-            showMyTemplatesSection();
+            // Decide where to go back based on login state
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (session && session.user) {
+                showMyTemplatesSection();
+            } else {
+                hideAllSections();
+                if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
+                fetchAndDisplayPublicTemplates();
+            }
         });
     }
-
 }
