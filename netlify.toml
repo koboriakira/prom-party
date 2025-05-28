@@ -1,0 +1,18 @@
+[build]
+  # This command is usually for building your site (e.g., if using a static site generator)
+  # For a plain HTML/CSS/JS site, it might be empty or just copy files.
+  # command = "echo 'No build command specified for static site'"
+  
+  # Directory to deploy (e.g., where index.html is)
+  publish = "." # Assuming index.html is in the root. If you have a 'public' or 'dist' folder, change this.
+
+[functions]
+  # Directory for Netlify serverless functions
+  directory = "netlify/functions"
+
+# Optional: Redirects and Rewrites (can be useful later for cleaner URLs)
+# Example:
+# [[redirects]]
+#  from = "/api/*"
+#  to = "/.netlify/functions/:splat"
+#  status = 200
