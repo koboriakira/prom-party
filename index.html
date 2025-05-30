@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="css/tailwind-output.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body class="bg-gray-100 text-gray-800 font-sans leading-normal">
     <header class="bg-gray-800 text-white p-4 text-center">
         <h1 class="text-2xl md:text-3xl font-bold">プロンプト生成アプリ</h1>
@@ -15,109 +17,130 @@
             <button id="logout-button" style="display: none;">ログアウト</button>
         </div>
     </header>
-    <main class="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto min-h-[calc(100vh-150px)]"> {/* Assuming header/footer take up roughly 150px total */}
+    <main class="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto min-h-[calc(100vh-150px)]">
         <p>プロンプト生成アプリへようこそ！</p>
         <div id="user-info" style="margin-top: 20px;"></div>
 
-    <!-- Add this inside the <main> element, after the existing <p> and #user-info div -->
-    <div id="my-templates-section" style="display: none; margin-top: 20px;">
-        <h2>マイテンプレート</h2>
-        <button id="create-new-template-button">新しいテンプレートを作成</button>
-        <div id="templates-list" style="margin-top: 10px;">
-            <!-- Templates will be listed here by JavaScript -->
-            <p>まだテンプレートがありません。作成しましょう！</p>
+        <!-- Add this inside the <main> element, after the existing <p> and #user-info div -->
+        <div id="my-templates-section" style="display: none; margin-top: 20px;">
+            <h2>マイテンプレート</h2>
+            <button id="create-new-template-button">新しいテンプレートを作成</button>
+            <div id="templates-list" style="margin-top: 10px;">
+                <!-- Templates will be listed here by JavaScript -->
+                <p>まだテンプレートがありません。作成しましょう！</p>
+            </div>
         </div>
-    </div>
 
-    <div id="template-editor-section" style="display: none;" class="bg-white p-4 md:p-6 rounded-lg shadow-lg mt-6">
-        <h2 id="editor-heading" class="text-2xl font-semibold text-gray-800 mb-6">テンプレートエディタ</h2>
-        <form id="template-form" class="space-y-6">
+        <div id="template-editor-section" style="display: none;" class="bg-white p-4 md:p-6 rounded-lg shadow-lg mt-6">
+            <h2 id="editor-heading" class="text-2xl font-semibold text-gray-800 mb-6">テンプレートエディタ</h2>
+            <form id="template-form" class="space-y-6">
+                <div>
+                    <label for="template-title" class="block text-sm font-medium text-gray-700 mb-1">タイトル:</label>
+                    <input type="text" id="template-title" name="title"
+                        class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        required>
+                </div>
+
+                <div>
+                    <label for="template-description" class="block text-sm font-medium text-gray-700 mb-1">説明:</label>
+                    <textarea id="template-description" name="description" rows="3"
+                        class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                </div>
+
+                <div class="relative">
+                    <div class="flex items-center">
+                        <label for="template-prompt"
+                            class="block text-sm font-medium text-gray-700 mb-1">プロンプトテンプレート（プレースホルダには {{variable_name}}
+                            を使用します）:</label>
+                        <span id="tooltip-trigger"
+                            class="ml-2 text-indigo-600 hover:text-indigo-800 cursor-pointer text-xs">(構文ガイド)</span>
+                    </div>
+                    <textarea id="template-prompt" name="prompt_template" rows="8"
+                        class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-mono"
+                        required></textarea>
+                    <div id="syntax-guide-tooltip"
+                        class="hidden absolute z-10 mt-1 w-72 md:w-80 p-3 bg-white border border-gray-300 rounded-lg shadow-xl text-sm text-gray-700 -translate-y-full -top-2">
+                        プロンプト内で動的に置き換えたい部分には、<code class="bg-gray-200 text-red-600 px-1 rounded text-xs">{{変数名}}</code>
+                        のように二重中括弧で囲んだ変数名を記述します。<br><br>
+                        例: <code
+                            class="bg-gray-200 text-red-600 px-1 rounded text-xs">{{顧客名}}様、今月のおすすめ商品は{{商品名}}です。</code><br><br>
+                        入力フィールドで定義した「名前」がここで使用する変数名に対応します。
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-medium text-gray-800 mb-2 mt-6 border-t pt-4">入力フィールド</h3>
+                    <div id="template-fields-editor" class="space-y-4">
+                        <!-- Dynamic fields will be added here by JavaScript -->
+                        <p class="text-gray-500 text-sm">まだフィールドが定義されていません。</p>
+                    </div>
+                    <button type="button" id="add-field-button"
+                        class="mt-3 btn-tailwind bg-green-500 hover:bg-green-600 text-white text-sm">フィールドを追加</button>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-medium text-gray-800 mb-2 mt-6 border-t pt-4">タグ</h3>
+                    <div id="template-tags-editor" class="flex items-center space-x-2">
+                        <input type="text" id="tag-input" placeholder="タグを追加"
+                            class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <button type="button" id="add-tag-button"
+                            class="btn-tailwind bg-blue-500 hover:bg-blue-600 text-white text-sm whitespace-nowrap">タグを追加</button>
+                    </div>
+                    <div id="current-tags" class="mt-3 space-x-2">
+                        <!-- Current tags will be shown here -->
+                        <p class="text-gray-500 text-sm">まだタグがありません。</p>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-gray-200 flex space-x-3">
+                    <button type="submit" id="save-template-button"
+                        class="btn-tailwind bg-indigo-600 hover:bg-indigo-700 text-white">テンプレートを保存</button>
+                    <button type="button" id="cancel-edit-button"
+                        class="btn-tailwind bg-gray-300 hover:bg-gray-400 text-gray-700">キャンセル</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Add this inside the <main> element, after other sections like template-editor-section -->
+        <div id="prompt-generation-section" style="display: none;"
+            class="bg-white p-4 md:p-6 rounded-lg shadow-lg mt-6 space-y-6">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">テンプレートからプロンプトを生成</h2>
+            <button id="back-to-my-templates-button"
+                class="btn-tailwind bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm mb-4">マイテンプレートに戻る</button>
+
+            <div id="generation-template-info" class="mb-6 p-4 bg-indigo-50 rounded-md">
+                <!-- Selected template's title and description will be shown here by JS (using Tailwind classes) -->
+            </div>
+
             <div>
-                <label for="template-title" class="block text-sm font-medium text-gray-700 mb-1">タイトル:</label>
-                <input type="text" id="template-title" name="title" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                <h3 class="text-lg font-medium text-gray-800 mb-2">あなたの入力:</h3>
+                <div id="generation-fields-form" class="space-y-4 mb-4">
+                    <!-- Dynamic input fields based on the template will be rendered here -->
+                    <p class="text-gray-500 text-sm">このテンプレートには入力フィールドがありません。</p>
+                </div>
             </div>
 
             <div>
-                <label for="template-description" class="block text-sm font-medium text-gray-700 mb-1">説明:</label>
-                <textarea id="template-description" name="description" rows="3" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                <h3 class="text-lg font-medium text-gray-800 mb-2">生成されたプロンプト:</h3>
+                <textarea id="generated-prompt-output" readonly rows="10"
+                    class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-mono"></textarea>
+                <button id="copy-prompt-button"
+                    class="mt-2 btn-tailwind bg-blue-500 hover:bg-blue-600 text-white">プロンプトをコピー</button>
             </div>
+        </div>
 
-            <div class="relative"> {/* Relative positioning for the tooltip */}
-                <div class="flex items-center">
-                    <label for="template-prompt" class="block text-sm font-medium text-gray-700 mb-1">プロンプトテンプレート（プレースホルダには {{variable_name}} を使用します）:</label>
-                    <span id="tooltip-trigger" class="ml-2 text-indigo-600 hover:text-indigo-800 cursor-pointer text-xs">(構文ガイド)</span>
-                </div>
-                <textarea id="template-prompt" name="prompt_template" rows="8" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-mono" required></textarea>
-                <div id="syntax-guide-tooltip" class="hidden absolute z-10 mt-1 w-72 md:w-80 p-3 bg-white border border-gray-300 rounded-lg shadow-xl text-sm text-gray-700 -translate-y-full -top-2"> {/* Adjusted width and negative top for positioning */}
-                    プロンプト内で動的に置き換えたい部分には、<code class="bg-gray-200 text-red-600 px-1 rounded text-xs">{{変数名}}</code> のように二重中括弧で囲んだ変数名を記述します。<br><br>
-                    例: <code class="bg-gray-200 text-red-600 px-1 rounded text-xs">{{顧客名}}様、今月のおすすめ商品は{{商品名}}です。</code><br><br>
-                    入力フィールドで定義した「名前」がここで使用する変数名に対応します。
-                </div>
-            </div>
-            
-            <div>
-                <h3 class="text-lg font-medium text-gray-800 mb-2 mt-6 border-t pt-4">入力フィールド</h3>
-                <div id="template-fields-editor" class="space-y-4">
-                    <!-- Dynamic fields will be added here by JavaScript -->
-                    <p class="text-gray-500 text-sm">まだフィールドが定義されていません。</p>
-                </div>
-                <button type="button" id="add-field-button" class="mt-3 btn-tailwind bg-green-500 hover:bg-green-600 text-white text-sm">フィールドを追加</button>
-            </div>
-            
-            <div>
-                <h3 class="text-lg font-medium text-gray-800 mb-2 mt-6 border-t pt-4">タグ</h3>
-                <div id="template-tags-editor" class="flex items-center space-x-2">
-                    <input type="text" id="tag-input" placeholder="タグを追加" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                    <button type="button" id="add-tag-button" class="btn-tailwind bg-blue-500 hover:bg-blue-600 text-white text-sm whitespace-nowrap">タグを追加</button>
-                </div>
-                <div id="current-tags" class="mt-3 space-x-2">
-                    <!-- Current tags will be shown here -->
-                     <p class="text-gray-500 text-sm">まだタグがありません。</p>
-                </div>
-            </div>
-            
-            <div class="mt-8 pt-6 border-t border-gray-200 flex space-x-3">
-                <button type="submit" id="save-template-button" class="btn-tailwind bg-indigo-600 hover:bg-indigo-700 text-white">テンプレートを保存</button>
-                <button type="button" id="cancel-edit-button" class="btn-tailwind bg-gray-300 hover:bg-gray-400 text-gray-700">キャンセル</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Add this inside the <main> element, after other sections like template-editor-section -->
-    <div id="prompt-generation-section" style="display: none;" class="bg-white p-4 md:p-6 rounded-lg shadow-lg mt-6 space-y-6">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">テンプレートからプロンプトを生成</h2>
-        <button id="back-to-my-templates-button" class="btn-tailwind bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm mb-4">マイテンプレートに戻る</button>
-        
-        <div id="generation-template-info" class="mb-6 p-4 bg-indigo-50 rounded-md">
-            <!-- Selected template's title and description will be shown here by JS (using Tailwind classes) -->
-        </div>
-        
-        <div>
-            <h3 class="text-lg font-medium text-gray-800 mb-2">あなたの入力:</h3>
-            <div id="generation-fields-form" class="space-y-4 mb-4">
-                <!-- Dynamic input fields based on the template will be rendered here -->
-                 <p class="text-gray-500 text-sm">このテンプレートには入力フィールドがありません。</p>
+        <!-- Add this inside the <main> element -->
+        <div id="public-templates-section" style="display: none; margin-top: 20px;">
+            <h2>公開テンプレート</h2>
+            <div id="public-templates-list">
+                <!-- Public templates will be listed here -->
             </div>
         </div>
-        
-        <div>
-            <h3 class="text-lg font-medium text-gray-800 mb-2">生成されたプロンプト:</h3>
-            <textarea id="generated-prompt-output" readonly rows="10" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-mono"></textarea>
-            <button id="copy-prompt-button" class="mt-2 btn-tailwind bg-blue-500 hover:bg-blue-600 text-white">プロンプトをコピー</button>
-        </div>
-    </div>
-
-    <!-- Add this inside the <main> element -->
-    <div id="public-templates-section" style="display: none; margin-top: 20px;">
-        <h2>公開テンプレート</h2>
-        <div id="public-templates-list">
-            <!-- Public templates will be listed here -->
-        </div>
-    </div>
     </main>
     <footer class="bg-gray-800 text-white p-4 text-center">
         <p>&copy; 2025 プロンプトアプリ</p>
     </footer>
     <script src="js/app.js"></script>
 </body>
+
 </html>
