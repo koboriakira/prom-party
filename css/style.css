@@ -1,116 +1,483 @@
+/* Minimal Design Principles & UI Unification */
+
+:root {
+    /* Color Palette */
+    --primary-color: #007bff; /* A more standard blue for primary actions */
+    --secondary-color: #6c757d; /* A neutral secondary color */
+    --light-gray: #f8f9fa;
+    --medium-gray: #e9ecef;
+    --dark-gray: #343a40;
+    --text-color: #212529;
+    --text-color-light: #f8f9fa;
+    --border-color: #ced4da;
+    --danger-color: #dc3545;
+    --google-blue: #4285F4;
+    --google-red: #DB4437;
+    --success-color: #28a745;
+
+    /* Typography */
+    --font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --font-size-base: 1rem; /* Approx 16px */
+    --font-size-sm: 0.875rem; /* Approx 14px */
+    --font-size-lg: 1.25rem; /* Approx 20px */
+    --line-height-base: 1.6;
+
+    /* Borders & Radius */
+    --border-radius: 0.25rem; /* 4px */
+    --border-width: 1px;
+
+    /* Spacing */
+    --spacing-xs: 0.25rem; /* 4px */
+    --spacing-sm: 0.5rem;  /* 8px */
+    --spacing-md: 1rem;    /* 16px */
+    --spacing-lg: 1.5rem;  /* 24px */
+    --spacing-xl: 2rem;    /* 32px */
+}
+
+/* Global Resets and Base Styles */
 body {
-    font-family: sans-serif;
-    line-height: 1.6;
+    font-family: var(--font-family-sans-serif);
+    line-height: var(--line-height-base);
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
-    color: #333;
+    background-color: var(--light-gray);
+    color: var(--text-color);
+    font-size: var(--font-size-base);
 }
 
+/* Headings */
+h1, h2, h3, h4 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-sm);
+    font-weight: 500;
+}
+h1 { font-size: 2rem; }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+
+p {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+}
+
+/* Links */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+
+/* Header */
 header {
-    background: #333;
-    color: #fff;
-    padding: 1rem 0;
+    background: var(--dark-gray);
+    color: var(--text-color-light);
+    padding: var(--spacing-md) 0;
     text-align: center;
 }
-
-main {
-    padding: 1rem;
-    min-height: 70vh;
+header h1 {
+    color: var(--text-color-light); /* Ensure h1 in header is light */
 }
 
+
+/* Main Content */
+main {
+    padding: var(--spacing-md);
+    min-height: 75vh; /* Adjusted slightly */
+}
+
+/* Footer */
 footer {
     text-align: center;
-    padding: 1rem;
-    background: #333;
-    color: #fff;
-    position: relative;
-    bottom: 0;
+    padding: var(--spacing-md);
+    background: var(--dark-gray);
+    color: var(--text-color-light);
     width: 100%;
+    box-sizing: border-box; /* ensure padding doesn't add to width */
 }
 
-/* Add to existing css/style.css */
-#auth-status {
-    padding: 0.5rem;
-    text-align: right; /* Align buttons to the right within the header */
-}
-
-#auth-status button {
-    margin-left: 10px;
-    padding: 8px 12px;
+/* Buttons */
+.btn {
+    display: inline-block;
+    font-weight: 400;
+    color: var(--text-color-light);
+    text-align: center;
+    vertical-align: middle;
     cursor: pointer;
-    border: none;
-    border-radius: 4px;
+    user-select: none;
+    background-color: var(--secondary-color);
+    border: var(--border-width) solid transparent;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    border-radius: var(--border-radius);
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    margin: var(--spacing-xs);
+}
+.btn:hover {
+    opacity: 0.9;
+}
+.btn:focus, .btn.focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5); /* Secondary color focus */
 }
 
-#login-button {
-    background-color: #4285F4; /* Google Blue */
-    color: white;
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+.btn-primary:hover { background-color: #0069d9; border-color: #0062cc; }
+.btn-primary:focus, .btn-primary.focus { box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5); }
+
+
+.btn-danger {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+.btn-danger:hover { background-color: #c82333; border-color: #bd2130; }
+.btn-danger:focus, .btn-danger.focus { box-shadow: 0 0 0 0.2rem rgba(225, 83, 97, 0.5); }
+
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
 }
 
-#logout-button {
-    background-color: #DB4437; /* Google Red */
-    color: white;
+/* Specific Button Instances */
+#login-button { background-color: var(--google-blue); border-color: var(--google-blue); }
+#logout-button { background-color: var(--google-red); border-color: var(--google-red); }
+
+/* Auth Status Buttons - apply base .btn style */
+#auth-status button {
+    /* Inherits .btn, specific overrides if any below */
+    padding: var(--spacing-sm) var(--spacing-md); /* Unified padding */
 }
 
+/* Forms */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+    display: block;
+    width: 100%; /* Default to full width within their container */
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    color: var(--text-color);
+    background-color: #fff;
+    background-clip: padding-box;
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    margin-bottom: var(--spacing-md);
+    box-sizing: border-box;
+}
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--primary-color);
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+label {
+    display: inline-block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: 500;
+}
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Containers and Cards */
 #user-info {
-    margin-top: 15px;
-    padding: 10px;
-    background-color: #eee;
-    border-radius: 4px;
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    background-color: var(--medium-gray); /* Softer background */
+    border-radius: var(--border-radius);
+    border: var(--border-width) solid var(--border-color);
 }
 
-/* Basic Share Toggle CSS - add to style.css */
+.template-list-item,
+#template-editor-section,
+.field-group {
+    background-color: #fff;
+    border: var(--border-width) solid var(--border-color);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius);
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); /* Subtle shadow */
+}
+.field-group {
+    padding: var(--spacing-sm); /* Smaller padding for nested groups */
+    margin-bottom: var(--spacing-sm);
+    box-shadow: none; /* No shadow for sub-groups usually */
+}
+
+/* Prompt Generation Output */
+#generated-prompt-output {
+    background-color: var(--medium-gray); /* Read-only, distinct background */
+    font-family: monospace;
+    min-height: 150px;
+}
+
+/* Tags */
+.tag-display {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--medium-gray);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    margin-right: var(--spacing-xs);
+    margin-bottom: var(--spacing-xs);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+}
+.tag-display button { /* The 'x' remove button for tags */
+    margin-left: var(--spacing-sm);
+    border: none;
+    background: none;
+    color: var(--text-color);
+    padding: 0;
+    font-size: var(--font-size-base);
+    line-height: 1;
+    opacity: 0.7;
+}
+.tag-display button:hover { opacity: 1; }
+
+/* Share Toggle - Minimal adjustments to fit theme */
 .share-toggle-label {
     position: relative;
-    display: inline-block;
-    width: 50px; /* Adjust width */
-    height: 24px; /* Adjust height */
-    margin-left: 10px;
+    display: inline-flex; /* Use flex to align text and toggle */
+    align-items: center;
+    width: auto; /* Auto width based on content */
+    height: auto; /* Auto height */
+    margin-left: var(--spacing-sm);
 }
-.share-toggle-label input {
-    opacity: 0;
-    width: 0;
-    height: 0;
+.share-toggle-label input { /* Keep hidden */
+    opacity: 0; width: 0; height: 0; position: absolute;
 }
 .share-slider {
-    position: absolute;
+    position: relative; /* Changed from absolute for inline-flex */
     cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    -webkit-transition: .4s;
+    width: 40px; /* Smaller toggle */
+    height: 20px;
+    background-color: var(--secondary-color);
     transition: .4s;
-    border-radius: 24px; /* Make it round */
+    border-radius: 20px;
+    margin-left: var(--spacing-xs); /* Space between "Share:" text and toggle */
 }
 .share-slider:before {
     position: absolute;
     content: "";
-    height: 18px; /* Adjust knob size */
-    width: 18px;  /* Adjust knob size */
-    left: 3px;    /* Adjust knob position */
-    bottom: 3px;  /* Adjust knob position */
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
     background-color: white;
-    -webkit-transition: .4s;
     transition: .4s;
     border-radius: 50%;
 }
-input:checked + .share-slider {
-    background-color: #2196F3; /* Blue when checked */
-}
-input:focus + .share-slider {
-    box-shadow: 0 0 1px #2196F3;
-}
+input:checked + .share-slider { background-color: var(--primary-color); }
+input:focus + .share-slider { box-shadow: 0 0 1px var(--primary-color); }
 input:checked + .share-slider:before {
-    -webkit-transform: translateX(26px); /* Adjust slide distance */
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
+    transform: translateX(20px);
 }
 .share-url-display {
-    font-size: 0.8em;
-    color: #555;
-    margin-top: 5px;
+    font-size: var(--font-size-sm);
+    color: var(--secondary-color);
+    margin-top: var(--spacing-xs);
     word-break: break-all;
+}
+
+/* Responsive Styles - Integrated with minimal design */
+
+/* Header specific adjustments (from responsive, now base for flex) */
+header {
+    display: flex;
+    flex-direction: column; /* Mobile first: stack title and auth */
+    align-items: center;
+    padding: var(--spacing-md); /* Consistent padding */
+}
+header h1 {
+    font-size: 1.75rem; /* Mobile H1 size */
+    margin-bottom: var(--spacing-sm);
+}
+#auth-status {
+    width: 100%;
+    text-align: center;
+    padding: var(--spacing-sm) 0;
+    display: flex;
+    flex-direction: column; /* Stack auth buttons on mobile */
+}
+#auth-status .btn { /* Apply .btn styling to auth buttons */
+    margin: var(--spacing-xs) 0; /* Vertical margin for stacked buttons */
+    width: 100%; /* Full width for stacked auth buttons */
+    max-width: 280px; /* Max width for auth buttons for better appearance */
+    align-self: center;
+}
+
+
+/* Main content flex layout */
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-md);
+}
+main > div { /* Direct children divs of main (sections) */
+    width: 100%;
+    max-width: 960px;
+    margin-bottom: var(--spacing-lg);
+    box-sizing: border-box;
+}
+
+/* Template Actions */
+.template-actions {
+    margin-top: var(--spacing-md);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+.template-actions .btn { /* Apply .btn to action buttons */
+    flex-grow: 1;
+    min-width: 100px; /* Min width for each action button */
+}
+.template-actions .share-container {
+    display: flex;
+    align-items: center;
+    flex-basis: 100%; /* Full width for share container on small screens */
+    margin-top: var(--spacing-sm);
+}
+
+
+/* For tablets and medium screens */
+@media (min-width: 601px) {
+    header {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: var(--spacing-md) var(--spacing-lg);
+    }
+    header h1 {
+        font-size: 2rem;
+        margin-bottom: 0;
+    }
+    #auth-status {
+        width: auto;
+        text-align: right;
+        flex-direction: row; /* Auth buttons side-by-side */
+    }
+    #auth-status .btn {
+        margin: 0 0 0 var(--spacing-sm); /* Margin for side-by-side buttons */
+        width: auto; /* Auto width for side-by-side buttons */
+    }
+
+    main {
+        padding: var(--spacing-lg);
+    }
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+        /* Base width is 100%, max-width will constrain on larger screens */
+    }
+    .template-actions .btn {
+        flex-grow: 0; /* Don't force grow if not needed, allow wrapping */
+    }
+    .template-actions .share-container {
+        flex-basis: auto; /* Allow it to fit content */
+    }
+}
+
+/* For mobile phones (max-width: 600px) - Specific overrides */
+@media (max-width: 600px) {
+    body {
+        font-size: var(--font-size-sm); /* Base font for mobile */
+    }
+    header h1 {
+        font-size: 1.5rem;
+    }
+    main {
+        padding: var(--spacing-sm);
+    }
+    /* Form inputs and textareas take full width */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+        width: 100%;
+    }
+    /* Labels in forms */
+    label {
+        margin-bottom: var(--spacing-xs);
+    }
+    /* Ensure buttons are easily tappable and full-width */
+    .btn, #auth-status .btn {
+        padding: var(--spacing-md) var(--spacing-lg); /* Larger padding */
+        font-size: var(--font-size-base);
+        display: block;
+        width: 100%;
+        margin-bottom: var(--spacing-sm);
+        margin-left: 0;
+        margin-right: 0;
+    }
+    #auth-status .btn {
+         /* Already stacked via flex-direction: column on #auth-status */
+    }
+
+    /* Template action buttons stack */
+    .template-actions {
+        flex-direction: column;
+    }
+    .template-actions .btn {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: var(--spacing-sm);
+    }
+    .template-actions .share-container {
+        /* Already flex-basis 100% */
+        justify-content: space-between; /* Space out "Share:" and toggle */
+    }
+    .share-toggle-label {
+        margin-left: 0;
+    }
+    .share-url-display {
+        font-size: var(--font-size-sm);
+    }
+
+    /* Field editor group adjustments */
+    .field-group {
+        padding: var(--spacing-sm);
+    }
+    .field-group .btn { /* "Remove Field" button */
+        width: auto; /* Not full width */
+        display: inline-block;
+        padding: var(--spacing-sm) var(--spacing-md);
+        margin-top: var(--spacing-sm);
+    }
+
+    footer {
+        font-size: var(--font-size-sm);
+        padding: var(--spacing-sm);
+    }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1025px) {
+    header h1 {
+        font-size: 2.25rem;
+    }
+    /* Constrain form element width on very large screens for readability */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+        max-width: 720px; /* Sensible max width */
+    }
 }

@@ -10,7 +10,7 @@ if (typeof supabase === 'undefined') {
     console.error('Supabase client library not loaded. Make sure the script tag is in index.html.');
     // Display error to user in UI
     const mainContent = document.querySelector('main');
-    if (mainContent) mainContent.innerHTML = '<p style="color:red;">Error: Application files could not load correctly. Please refresh.</p>';
+    if (mainContent) mainContent.innerHTML = '<p style="color:red;">エラー: アプリケーションファイルを正しく読み込めませんでした。ページを更新してください。</p>';
 } else {
     try {
         _supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
@@ -19,7 +19,7 @@ if (typeof supabase === 'undefined') {
         console.error("CRITICAL: Supabase client failed to initialize:", e);
         // Display error to user in UI
         const mainContent = document.querySelector('main');
-        if (mainContent) mainContent.innerHTML = '<p style="color:red;">CRITICAL ERROR: Auth service failed to load. Please refresh or contact support.</p>';
+        if (mainContent) mainContent.innerHTML = '<p style="color:red;">重大なエラー: 認証サービスを読み込めませんでした。ページを更新するか、サポートにお問い合わせください。</p>';
         // return; // Stop further execution - this return would be outside a function, so we'll rely on _supabase being undefined
     }
 
@@ -106,7 +106,7 @@ if (typeof supabase === 'undefined') {
 
             if (errorGettingSession) {
                 console.error("Error getting session in updateAuthStatus:", errorGettingSession.message);
-                if (userInfoDiv) userInfoDiv.innerHTML = `<p>Error checking auth status.</p>`;
+                if (userInfoDiv) userInfoDiv.innerHTML = `<p>認証ステータスの確認中にエラーが発生しました。</p>`;
                 if (loginButton) loginButton.style.display = 'inline-block';
                 if (logoutButton) logoutButton.style.display = 'none';
                 if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
@@ -122,7 +122,7 @@ if (typeof supabase === 'undefined') {
             if (sessionToUse && sessionToUse.user) {
                 const user = sessionToUse.user;
                 console.log("updateAuthStatus: User is logged in:", user.email);
-                if (userInfoDiv) userInfoDiv.innerHTML = `<p>Logged in as: ${user.email}</p>`;
+                if (userInfoDiv) userInfoDiv.innerHTML = `<p>ログインユーザー: ${user.email}</p>`;
                 if (loginButton) loginButton.style.display = 'none';
                 if (logoutButton) logoutButton.style.display = 'inline-block';
 
@@ -136,7 +136,7 @@ if (typeof supabase === 'undefined') {
 
                     if (templateError) {
                         console.error('updateAuthStatus: Error fetching template from URL (logged in):', templateError);
-                        alert('Error loading template from URL. It might have been removed or the link is incorrect.');
+                        alert('URLからのテンプレートの読み込み中にエラーが発生しました。削除されたか、リンクが間違っている可能性があります。');
                         window.history.replaceState({}, document.title, window.location.pathname); 
                         showMyTemplatesSection();
                     } else if (template) {
@@ -146,13 +146,13 @@ if (typeof supabase === 'undefined') {
                             await handleUseTemplate(template.id);
                         } else {
                             console.warn("updateAuthStatus: Template is not public and not owned by user.");
-                            alert('This template is not public and does not belong to you.');
+                            alert('このテンプレートは公開されておらず、あなたのものではありません。');
                             window.history.replaceState({}, document.title, window.location.pathname); 
                             showMyTemplatesSection();
                         }
                     } else { 
                         console.warn("updateAuthStatus: Template not found from URL (logged in).");
-                        alert('Template not found from URL.');
+                        alert('URLからテンプレートが見つかりませんでした。');
                         window.history.replaceState({}, document.title, window.location.pathname); 
                         showMyTemplatesSection();
                     }
@@ -165,7 +165,7 @@ if (typeof supabase === 'undefined') {
 
             } else { // Not logged in
                 console.log("updateAuthStatus: User is not logged in.");
-                if (userInfoDiv) userInfoDiv.innerHTML = '<p>You are not logged in. Browse public templates below or login to create your own.</p>';
+                if (userInfoDiv) userInfoDiv.innerHTML = '<p>ログインしていません。以下の公開テンプレートを閲覧するか、ログインして独自のテンプレートを作成してください。</p>';
                 if (loginButton) loginButton.style.display = 'inline-block';
                 if (logoutButton) logoutButton.style.display = 'none';
 
@@ -210,7 +210,7 @@ if (typeof supabase === 'undefined') {
 
             if (err) {
                 console.error("Error fetching template by ID for public view in loadPublicTemplateFromUrl:", err);
-                alert("Could not load the template. It might have been removed or the link is incorrect.");
+                alert("テンプレートを読み込めませんでした。削除されたか、リンクが間違っている可能性があります。");
                 window.history.replaceState({}, document.title, window.location.pathname);
                 if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
                 fetchAndDisplayPublicTemplates();
@@ -229,14 +229,14 @@ if (typeof supabase === 'undefined') {
                     return true;
                 } else {
                     console.warn("loadPublicTemplateFromUrl: Template is not public.");
-                    alert("This template is not public. Please log in if you are the owner.");
+                    alert("このテンプレートは公開されていません。所有者の場合はログインしてください。");
                     if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
                     fetchAndDisplayPublicTemplates();
                     return false;
                 }
             } else {
                 console.warn("loadPublicTemplateFromUrl: Template not found for ID:", templateId);
-                alert("Template not found.");
+                alert("テンプレートが見つかりません。");
                 window.history.replaceState({}, document.title, window.location.pathname);
                 if (publicTemplatesSection) publicTemplatesSection.style.display = 'block';
                 fetchAndDisplayPublicTemplates();
@@ -274,11 +274,11 @@ if (typeof supabase === 'undefined') {
 
         async function fetchAndDisplayUserTemplates() {
             if (!templatesListDiv || !_supabase) return;
-            templatesListDiv.innerHTML = '<p>Loading templates...</p>';
+            templatesListDiv.innerHTML = '<p>テンプレートを読み込み中...</p>';
 
             const { data: { session } } = await _supabase.auth.getSession();
             if (!session || !session.user) {
-                templatesListDiv.innerHTML = '<p>Please login to see your templates.</p>';
+                templatesListDiv.innerHTML = '<p>テンプレートを表示するにはログインしてください。</p>';
                 return;
             }
             const userId = session.user.id;
@@ -291,7 +291,7 @@ if (typeof supabase === 'undefined') {
 
             if (error) {
                 console.error('Error fetching templates:', error);
-                templatesListDiv.innerHTML = '<p>Error loading templates. Check console.</p>';
+                templatesListDiv.innerHTML = '<p>テンプレートの読み込み中にエラーが発生しました。コンソールを確認してください。</p>';
             } else {
                 renderTemplates(data, userId); 
             }
@@ -302,18 +302,23 @@ if (typeof supabase === 'undefined') {
             templatesListDiv.innerHTML = '';
 
             if (!templatesData || templatesData.length === 0) {
-                templatesListDiv.innerHTML = '<p>No templates yet. Create one!</p>';
+                templatesListDiv.innerHTML = '<p>まだテンプレートがありません。作成しましょう！</p>';
                 return;
             }
 
             const ul = document.createElement('ul');
             ul.style.listStyleType = 'none';
             ul.style.padding = '0';
+            const fragment = document.createDocumentFragment();
 
             templatesData.forEach(template => {
                 const li = document.createElement('li');
                 li.className = 'template-list-item'; 
-                li.style.border = '1px solid #eee';
+                // Note: Inline styles like these were largely moved to CSS in the "minimal design" step.
+                // If this code is still active and creating these inline styles,
+                // it might override the CSS. This should be ideally harmonized.
+                // For this subtask, I'm focusing on DocumentFragment, not removing existing logic.
+                li.style.border = '1px solid #eee'; // Example: This might be in CSS now
                 li.style.padding = '10px';
                 li.style.marginBottom = '10px';
                 li.style.borderRadius = '4px';
@@ -324,7 +329,7 @@ if (typeof supabase === 'undefined') {
                 li.appendChild(titleEl);
 
                 const descriptionEl = document.createElement('p');
-                descriptionEl.textContent = template.description || 'No description.';
+                descriptionEl.textContent = template.description || '説明なし。';
                 li.appendChild(descriptionEl);
 
                 const promptSnippetEl = document.createElement('p');
@@ -332,7 +337,7 @@ if (typeof supabase === 'undefined') {
                 promptSnippetEl.style.fontFamily = 'monospace';
                 promptSnippetEl.style.fontSize = '0.9em';
                 promptSnippetEl.style.color = '#555';
-                promptSnippetEl.textContent = 'Prompt: ' + (template.prompt_template ? template.prompt_template.substring(0, 70) + '...' : 'Not set');
+                promptSnippetEl.textContent = 'プロンプト: ' + (template.prompt_template ? template.prompt_template.substring(0, 70) + '...' : '未設定');
                 li.appendChild(promptSnippetEl);
 
                 const actionsDiv = document.createElement('div');
@@ -340,21 +345,21 @@ if (typeof supabase === 'undefined') {
                 actionsDiv.style.marginTop = "10px";
 
                 const editButton = document.createElement('button');
-                editButton.textContent = 'Edit';
+                editButton.textContent = '編集';
                 editButton.setAttribute('data-template-id', template.id);
                 editButton.style.marginRight = '5px';
                 editButton.addEventListener('click', () => handleEditTemplate(template.id));
                 actionsDiv.appendChild(editButton);
 
                 const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Delete';
+                deleteButton.textContent = '削除';
                 deleteButton.setAttribute('data-template-id', template.id);
                 deleteButton.style.marginRight = '5px';
                 deleteButton.addEventListener('click', () => handleDeleteTemplate(template.id));
                 actionsDiv.appendChild(deleteButton);
 
                 const useButton = document.createElement('button');
-                useButton.textContent = 'Use';
+                useButton.textContent = '使用';
                 useButton.setAttribute('data-template-id', template.id);
                 useButton.style.marginRight = '5px';
                 useButton.addEventListener('click', () => handleUseTemplate(template.id));
@@ -365,7 +370,7 @@ if (typeof supabase === 'undefined') {
                 shareContainer.style.display = 'inline-block'; 
 
                 const shareLabelText = document.createElement('span');
-                shareLabelText.textContent = 'Share: ';
+                shareLabelText.textContent = '共有: ';
                 shareContainer.appendChild(shareLabelText);
 
                 const shareToggleLabel = document.createElement('label');
@@ -395,7 +400,7 @@ if (typeof supabase === 'undefined') {
                 shareCheckbox.addEventListener('change', async (event) => {
                     const newIsPublicState = event.target.checked;
                     if (!currentUserId) {
-                        alert("User ID not found. Cannot change sharing status.");
+                        alert("ユーザーIDが見つかりません。共有ステータスを変更できません。");
                         event.target.checked = !newIsPublicState; return;
                     }
 
@@ -407,7 +412,7 @@ if (typeof supabase === 'undefined') {
 
                     if (updateShareError) {
                         console.error("Error updating sharing status:", updateShareError);
-                        alert("Failed to update sharing status: " + updateShareError.message);
+                        alert("共有ステータスの更新に失敗しました: " + updateShareError.message);
                         event.target.checked = !newIsPublicState;
                     } else {
                         template.is_public = newIsPublicState;
@@ -422,9 +427,10 @@ if (typeof supabase === 'undefined') {
                 });
 
                 li.appendChild(actionsDiv);
-                ul.appendChild(li);
+                fragment.appendChild(li);
             });
-            templatesListDiv.appendChild(ul);
+            ul.appendChild(fragment); // Append all LIs at once to UL
+            templatesListDiv.appendChild(ul); // Append UL to the main list div
         }
 
         function showTemplateEditorSection(templateDataToEdit = null) {
@@ -432,16 +438,16 @@ if (typeof supabase === 'undefined') {
             if (templateEditorSection) templateEditorSection.style.display = 'block';
 
             if (templateDataToEdit && currentEditingTemplateId) {
-                if (editorHeading) editorHeading.textContent = 'Edit Template';
-                if (saveTemplateButton) saveTemplateButton.textContent = 'Update Template';
+                if (editorHeading) editorHeading.textContent = 'テンプレートを編集';
+                if (saveTemplateButton) saveTemplateButton.textContent = 'テンプレートを更新';
             } else {
                 currentEditingTemplateId = null;
-                if (editorHeading) editorHeading.textContent = 'Create New Template';
-                if (saveTemplateButton) saveTemplateButton.textContent = 'Save Template';
+                if (editorHeading) editorHeading.textContent = '新しいテンプレートを作成';
+                if (saveTemplateButton) saveTemplateButton.textContent = 'テンプレートを保存';
                 if (templateForm) templateForm.reset();
 
-                if (fieldsEditorDiv) fieldsEditorDiv.innerHTML = '<p>No fields defined yet. Click "Add Field".</p>';
-                if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>No tags yet.</span>';
+                if (fieldsEditorDiv) fieldsEditorDiv.innerHTML = '<p>まだフィールドが定義されていません。「フィールドを追加」をクリックしてください。</p>';
+                if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>まだタグがありません。</span>';
                 if (tagInputElement) tagInputElement.value = '';
             }
             console.log("Showing Template Editor section. Editing ID:", currentEditingTemplateId);
@@ -455,7 +461,7 @@ if (typeof supabase === 'undefined') {
                 .eq('id', templateId)
                 .single();
 
-            if (error) { console.error('Error fetching template for edit:', error); alert('Could not fetch template details. ' + error.message); return; }
+            if (error) { console.error('Error fetching template for edit:', error); alert('テンプレートの詳細を取得できませんでした。 ' + error.message); return; }
 
             if (template) {
                 currentEditingTemplateId = template.id;
@@ -463,42 +469,46 @@ if (typeof supabase === 'undefined') {
                 document.getElementById('template-description').value = template.description || '';
                 document.getElementById('template-prompt').value = template.prompt_template;
 
-                if (fieldsEditorDiv) fieldsEditorDiv.innerHTML = '<p>Loading fields...</p>';
-                const { data: fields, error: fieldsError } = await _supabase
-                    .from('fields')
-                    .select('*')
-                    .eq('template_id', templateId)
-                    .order('sort_order', { ascending: true });
+                if (fieldsEditorDiv) fieldsEditorDiv.innerHTML = '<p>フィールドを読み込み中...</p>';
+                if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>タグを読み込み中...</span>';
 
+                const [fieldsResponse, templateTagLinksResponse] = await Promise.all([
+                    _supabase
+                        .from('fields')
+                        .select('*')
+                        .eq('template_id', templateId)
+                        .order('sort_order', { ascending: true }),
+                    _supabase
+                        .from('template_tags')
+                        .select('tag_id')
+                        .eq('template_id', templateId)
+                ]);
+
+                const { data: fields, error: fieldsError } = fieldsResponse;
                 if (fieldsError) {
                     console.error('Error fetching fields:', fieldsError);
-                    if (fieldsEditorDiv) fieldsEditorDiv.innerHTML = '<p>Error loading fields.</p>';
+                    if (fieldsEditorDiv) fieldsEditorDiv.innerHTML = '<p>フィールドの読み込み中にエラーが発生しました。</p>';
                 } else {
                     if (fieldsEditorDiv) fieldsEditorDiv.innerHTML = '';
                     if (fields && fields.length > 0) { fields.forEach(field => renderFieldEditorGroup(field)); }
-                    else { if (fieldsEditorDiv) fieldsEditorDiv.innerHTML = '<p>No fields defined yet. Click "Add Field".</p>'; }
+                    else { if (fieldsEditorDiv) fieldsEditorDiv.innerHTML = '<p>まだフィールドが定義されていません。「フィールドを追加」をクリックしてください。</p>'; }
                 }
 
-                if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>Loading tags...</span>';
-                const { data: templateTagLinks, error: ttError } = await _supabase
-                    .from('template_tags')
-                    .select('tag_id')
-                    .eq('template_id', templateId);
-
+                const { data: templateTagLinks, error: ttError } = templateTagLinksResponse;
                 if (ttError) {
                     console.error("Error fetching template_tag links:", ttError);
-                    if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>Error loading tags.</span>';
+                    if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>タグの読み込み中にエラーが発生しました。</span>';
                 } else if (templateTagLinks && templateTagLinks.length > 0) {
                     const tagIds = templateTagLinks.map(link => link.tag_id);
                     const { data: tagsData, error: tagsError } = await _supabase.from('tags').select('id, name').in('id', tagIds);
-                    if (tagsError) { console.error("Error fetching tags:", tagsError); if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>Error loading tags.</span>'; }
+                    if (tagsError) { console.error("Error fetching tags:", tagsError); if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>タグの読み込み中にエラーが発生しました。</span>'; }
                     else if (tagsData) {
                         if (currentTagsDiv) currentTagsDiv.innerHTML = '';
-                        if (tagsData.length === 0) currentTagsDiv.innerHTML = '<span>No tags yet.</span>';
+                        if (tagsData.length === 0) currentTagsDiv.innerHTML = '<span>まだタグがありません。</span>';
                         else tagsData.forEach(tag => renderTag(tag.name, true));
                     }
                 } else {
-                    if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>No tags yet.</span>';
+                    if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>まだタグがありません。</span>';
                 }
 
                 showTemplateEditorSection(template);
@@ -507,29 +517,29 @@ if (typeof supabase === 'undefined') {
 
         async function handleDeleteTemplate(templateId) {
             if (!templateId) { console.error("No template ID provided for deletion."); return; }
-            if (!confirm('Are you sure you want to delete this template? This action cannot be undone.')) return;
+            if (!confirm('このテンプレートを本当に削除しますか？この操作は元に戻せません。')) return;
 
             const { data: { session } } = await _supabase.auth.getSession();
-            if (!session || !session.user) { alert('You must be logged in.'); return; }
+            if (!session || !session.user) { alert('ログインする必要があります。'); return; }
             const userId = session.user.id;
 
             const { error } = await _supabase.from('templates').delete().eq('id', templateId).eq('user_id', userId);
-            if (error) { console.error('Error deleting template:', error); alert(`Error deleting template: ${error.message}`); }
-            else { console.log('Template deleted:', templateId); alert('Template deleted.'); fetchAndDisplayUserTemplates(); }
+            if (error) { console.error('Error deleting template:', error); alert(`テンプレートの削除中にエラーが発生しました: ${error.message}`); }
+            else { console.log('Template deleted:', templateId); alert('テンプレートを削除しました。'); fetchAndDisplayUserTemplates(); }
         }
 
         if (templateForm) {
             templateForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 const { data: { session } } = await _supabase.auth.getSession();
-                if (!session || !session.user) { alert('You must be logged in.'); return; }
+                if (!session || !session.user) { alert('ログインする必要があります。'); return; }
                 const userId = session.user.id;
 
                 const title = document.getElementById('template-title').value.trim();
                 const description = document.getElementById('template-description').value.trim();
                 const prompt_template = document.getElementById('template-prompt').value.trim();
 
-                if (!title || !prompt_template) { alert('Title and Prompt Template are required.'); return; }
+                if (!title || !prompt_template) { alert('タイトルとプロンプトテンプレートは必須です。'); return; }
 
                 let savedTemplateId = currentEditingTemplateId;
                 let mainOpSuccess = false;
@@ -538,16 +548,16 @@ if (typeof supabase === 'undefined') {
                     const { data: tData, error: tError } = await _supabase.from('templates')
                         .update({ title, description, prompt_template, updated_at: new Date() })
                         .eq('id', currentEditingTemplateId).eq('user_id', userId).select().single();
-                    if (tError) { console.error('Err updating template:', tError); alert(`Err: ${tError.message}`); return; }
+                    if (tError) { console.error('Err updating template:', tError); alert(`テンプレートの更新エラー: ${tError.message}`); return; }
                     console.log('Template updated:', tData); savedTemplateId = tData.id; mainOpSuccess = true;
                 } else { 
                     const { data: tData, error: tError } = await _supabase.from('templates')
                         .insert([{ user_id: userId, title, description, prompt_template }]).select().single();
-                    if (tError) { console.error('Err saving template:', tError); alert(`Err: ${tError.message}`); return; }
+                    if (tError) { console.error('Err saving template:', tError); alert(`テンプレートの保存エラー: ${tError.message}`); return; }
                     console.log('Template saved:', tData); savedTemplateId = tData.id; mainOpSuccess = true;
                 }
 
-                if (!mainOpSuccess || !savedTemplateId) { alert("Failed to save template data."); return; }
+                if (!mainOpSuccess || !savedTemplateId) { alert("テンプレートデータの保存に失敗しました。"); return; }
 
                 const fieldGroups = fieldsEditorDiv.querySelectorAll('.field-group');
                 const fieldsToSave = []; let fieldValidationError = false;
@@ -566,13 +576,13 @@ if (typeof supabase === 'undefined') {
                     fieldsToSave.push({ template_id: savedTemplateId, name, label, type, options, sort_order });
                 });
 
-                if (fieldValidationError) { alert("Field validation failed. Correct and save again."); currentEditingTemplateId = savedTemplateId; return; }
+                if (fieldValidationError) { alert("フィールドの検証に失敗しました。修正して再度保存してください。"); currentEditingTemplateId = savedTemplateId; return; }
 
                 const { error: delFieldsError } = await _supabase.from('fields').delete().eq('template_id', savedTemplateId);
-                if (delFieldsError) { console.error("Err deleting old fields", delFieldsError); alert("Err clearing old fields. Try save again."); currentEditingTemplateId = savedTemplateId; return; }
+                if (delFieldsError) { console.error("Err deleting old fields", delFieldsError); alert("古いフィールドのクリア中にエラーが発生しました。もう一度保存してみてください。"); currentEditingTemplateId = savedTemplateId; return; }
                 if (fieldsToSave.length > 0) {
                     const { error: insFieldsError } = await _supabase.from('fields').insert(fieldsToSave);
-                    if (insFieldsError) { console.error("Err saving fields", insFieldsError); alert("Err saving fields. Try save again."); currentEditingTemplateId = savedTemplateId; return; }
+                    if (insFieldsError) { console.error("Err saving fields", insFieldsError); alert("フィールドの保存中にエラーが発生しました。もう一度保存してみてください。"); currentEditingTemplateId = savedTemplateId; return; }
                 }
                 console.log("Fields saved for template:", savedTemplateId);
 
@@ -592,21 +602,21 @@ if (typeof supabase === 'undefined') {
                         }
                     }
                 }
-                if (tagProcessingError) { alert('Partial success: Issue processing some tags. Review and save again if needed.'); }
+                if (tagProcessingError) { alert('部分的に成功: 一部のタグの処理中に問題が発生しました。確認して必要に応じて再度保存してください。'); }
 
                 const { error: delOldLinksErr } = await _supabase.from('template_tags').delete().eq('template_id', savedTemplateId);
-                if (delOldLinksErr) { console.error('Err del old t_tags:', delOldLinksErr); alert('Err clearing old tags. Save again.'); currentEditingTemplateId = savedTemplateId; return; }
+                if (delOldLinksErr) { console.error('Err del old t_tags:', delOldLinksErr); alert('古いタグのクリア中にエラーが発生しました。もう一度保存してください。'); currentEditingTemplateId = savedTemplateId; return; }
                 if (validTagIds.length > 0) {
                     const linksToSave = validTagIds.map(tagId => ({ template_id: savedTemplateId, tag_id: tagId }));
                     const { error: insNewLinksErr } = await _supabase.from('template_tags').insert(linksToSave);
-                    if (insNewLinksErr) { console.error('Err ins t_tags:', insNewLinksErr); alert('Err saving tags. Save again.'); currentEditingTemplateId = savedTemplateId; return; }
+                    if (insNewLinksErr) { console.error('Err ins t_tags:', insNewLinksErr); alert('タグの保存中にエラーが発生しました。もう一度保存してください。'); currentEditingTemplateId = savedTemplateId; return; }
                 }
                 console.log("Tags saved for template:", savedTemplateId);
 
-                alert('Template, fields, and tags processed successfully!');
+                alert('テンプレート、フィールド、タグが正常に処理されました！');
                 currentEditingTemplateId = null; templateForm.reset();
-                if (fieldsEditorDiv) fieldsEditorDiv.innerHTML = '<p>No fields defined yet.</p>';
-                if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>No tags yet.</span>';
+                if (fieldsEditorDiv) fieldsEditorDiv.innerHTML = '<p>まだフィールドが定義されていません。</p>';
+                if (currentTagsDiv) currentTagsDiv.innerHTML = '<span>まだタグがありません。</span>';
                 if (tagInputElement) tagInputElement.value = '';
                 showMyTemplatesSection();
             });
@@ -625,19 +635,19 @@ if (typeof supabase === 'undefined') {
 
             const idInput = document.createElement('input'); idInput.type = 'hidden'; idInput.className = 'field-id'; idInput.value = fieldData ? fieldData.id : ''; fieldGroup.appendChild(idInput);
             const sortOrderDiv = document.createElement('div');
-            const sortOrderLabel = document.createElement('label'); sortOrderLabel.textContent = 'Sort Order: ';
+            const sortOrderLabel = document.createElement('label'); sortOrderLabel.textContent = '並び順: ';
             const sortOrderInput = document.createElement('input'); sortOrderInput.type = 'number'; sortOrderInput.className = 'field-sort-order'; sortOrderInput.value = fieldData ? fieldData.sort_order : '0'; sortOrderInput.style.width = '60px';
             sortOrderLabel.appendChild(sortOrderInput); sortOrderDiv.appendChild(sortOrderLabel); fieldGroup.appendChild(sortOrderDiv);
             const nameDiv = document.createElement('div');
-            const nameLabelEl = document.createElement('label'); nameLabelEl.textContent = 'Name (for {{variable}}): ';
+            const nameLabelEl = document.createElement('label'); nameLabelEl.textContent = '名前（{{variable}}用）: ';
             const nameInputEl = document.createElement('input'); nameInputEl.type = 'text'; nameInputEl.className = 'field-name'; nameInputEl.required = true; nameInputEl.value = fieldData ? fieldData.name : '';
             nameLabelEl.appendChild(nameInputEl); nameDiv.appendChild(nameLabelEl); fieldGroup.appendChild(nameDiv);
             const labelDiv = document.createElement('div');
-            const labelLabelEl = document.createElement('label'); labelLabelEl.textContent = 'Label (UI display): ';
+            const labelLabelEl = document.createElement('label'); labelLabelEl.textContent = 'ラベル（UI表示）: ';
             const labelInputEl = document.createElement('input'); labelInputEl.type = 'text'; labelInputEl.className = 'field-label'; labelInputEl.required = true; labelInputEl.value = fieldData ? fieldData.label : '';
             labelLabelEl.appendChild(labelInputEl); labelDiv.appendChild(labelLabelEl); fieldGroup.appendChild(labelDiv);
             const typeDiv = document.createElement('div');
-            const typeLabel = document.createElement('label'); typeLabel.textContent = 'Type: ';
+            const typeLabel = document.createElement('label'); typeLabel.textContent = 'タイプ: ';
             const typeSelect = document.createElement('select'); typeSelect.className = 'field-type';
             ['text', 'select', 'checkbox'].forEach(typeValue => {
                 const option = document.createElement('option'); option.value = typeValue; option.textContent = typeValue.charAt(0).toUpperCase() + typeValue.slice(1);
@@ -646,7 +656,7 @@ if (typeof supabase === 'undefined') {
             });
             typeLabel.appendChild(typeSelect); typeDiv.appendChild(typeLabel); fieldGroup.appendChild(typeDiv);
             const optionsWrapper = document.createElement('div'); optionsWrapper.className = 'field-options-wrapper';
-            const optionsLabel = document.createElement('label'); optionsLabel.textContent = 'Options (comma-separated): ';
+            const optionsLabel = document.createElement('label'); optionsLabel.textContent = 'オプション（カンマ区切り）: ';
             const optionsInputEl = document.createElement('input'); optionsInputEl.type = 'text'; optionsInputEl.className = 'field-options';
             if (fieldData && fieldData.type === 'select' && fieldData.options) {
                 optionsInputEl.value = Array.isArray(fieldData.options) ? fieldData.options.join(',') : (fieldData.options || '');
@@ -654,8 +664,8 @@ if (typeof supabase === 'undefined') {
             optionsLabel.appendChild(optionsInputEl); optionsWrapper.appendChild(optionsLabel); fieldGroup.appendChild(optionsWrapper);
             typeSelect.addEventListener('change', () => { optionsWrapper.style.display = typeSelect.value === 'select' ? 'block' : 'none'; });
             if (fieldData && fieldData.type === 'select') optionsWrapper.style.display = 'block'; else optionsWrapper.style.display = 'none';
-            const removeButton = document.createElement('button'); removeButton.type = 'button'; removeButton.textContent = 'Remove Field'; removeButton.style.marginTop = '5px';
-            removeButton.addEventListener('click', () => { fieldGroup.remove(); if (fieldsEditorDiv.children.length === 0) fieldsEditorDiv.innerHTML = '<p>No fields defined yet.</p>'; });
+            const removeButton = document.createElement('button'); removeButton.type = 'button'; removeButton.textContent = 'フィールドを削除'; removeButton.style.marginTop = '5px';
+            removeButton.addEventListener('click', () => { fieldGroup.remove(); if (fieldsEditorDiv.children.length === 0) fieldsEditorDiv.innerHTML = '<p>まだフィールドが定義されていません。</p>'; });
             fieldGroup.appendChild(removeButton);
             fieldsEditorDiv.appendChild(fieldGroup); return fieldGroup;
         }
@@ -664,7 +674,7 @@ if (typeof supabase === 'undefined') {
 
         function renderTag(tagName, isExisting = false) {
             if (!currentTagsDiv) return;
-            const noTagsMsg = currentTagsDiv.querySelector('span'); if (noTagsMsg && noTagsMsg.textContent.includes('No tags')) currentTagsDiv.innerHTML = '';
+            const noTagsMsg = currentTagsDiv.querySelector('span'); if (noTagsMsg && noTagsMsg.textContent.includes('まだタグがありません。')) currentTagsDiv.innerHTML = '';
             const existingSpans = currentTagsDiv.querySelectorAll('.tag-display span');
             for (let span of existingSpans) {
                 if (span.textContent.toLowerCase() === tagName.toLowerCase()) {
@@ -678,7 +688,7 @@ if (typeof supabase === 'undefined') {
             const removeBtn = document.createElement('button'); removeBtn.textContent = 'x';
             removeBtn.style.marginLeft = '5px'; removeBtn.style.border = 'none'; removeBtn.style.background = 'none';
             removeBtn.style.cursor = 'pointer'; removeBtn.style.fontSize = '14px'; removeBtn.style.padding = '0 5px';
-            removeBtn.addEventListener('click', () => { display.remove(); if (currentTagsDiv.children.length === 0) currentTagsDiv.innerHTML = '<span>No tags yet.</span>'; });
+            removeBtn.addEventListener('click', () => { display.remove(); if (currentTagsDiv.children.length === 0) currentTagsDiv.innerHTML = '<span>まだタグがありません。</span>'; });
             display.appendChild(removeBtn); currentTagsDiv.appendChild(display);
         }
 
@@ -692,13 +702,17 @@ if (typeof supabase === 'undefined') {
 
         function renderGenerationField(field) {
             const container = document.createElement('div'); container.style.marginBottom = '10px';
-            const label = document.createElement('label'); label.textContent = field.label + ': '; label.style.display = 'block'; container.appendChild(label);
+            const label = document.createElement('label'); label.textContent = field.label + ': '; label.style.display = 'block';
             let input;
             if (field.type === 'text') { input = document.createElement('input'); input.type = 'text'; }
             else if (field.type === 'select') { input = document.createElement('select'); if (field.options && Array.isArray(field.options)) field.options.forEach(opt => { const o = document.createElement('option'); o.value = opt; o.textContent = opt; input.appendChild(o); }); }
             else if (field.type === 'checkbox') { input = document.createElement('input'); input.type = 'checkbox'; input.value = field.label; } 
             else { input = document.createElement('input'); input.type = 'text'; } 
-            input.id = `gen-field-${field.name}`; input.className = 'generation-input-field'; input.setAttribute('data-field-name', field.name);
+            input.id = `gen-field-${field.name}`;
+            label.htmlFor = input.id; // Explicitly link label to input
+            container.appendChild(label); // Add label before input for standard DOM order
+
+            input.className = 'generation-input-field'; input.setAttribute('data-field-name', field.name);
             input.addEventListener('input', regenerateDynamicPrompt); input.addEventListener('change', regenerateDynamicPrompt);
             container.appendChild(input); return container;
         }
@@ -706,9 +720,9 @@ if (typeof supabase === 'undefined') {
         async function handleUseTemplate(templateId) {
             console.log("Using template ID:", templateId);
             const { data: t, error: tE } = await _supabase.from('templates').select('*').eq('id', templateId).single();
-            if (tE) { console.error("Err fetch template for gen:", tE); alert("Could not load template: " + tE.message); return; }
+            if (tE) { console.error("Err fetch template for gen:", tE); alert("テンプレートを読み込めませんでした: " + tE.message); return; }
             const { data: f, error: fE } = await _supabase.from('fields').select('*').eq('template_id', templateId).order('sort_order');
-            if (fE) { console.error("Err fetch fields for gen:", fE); alert("Could not load fields: " + fE.message); return; }
+            if (fE) { console.error("Err fetch fields for gen:", fE); alert("フィールドを読み込めませんでした: " + fE.message); return; }
             
             currentGenerationTemplateData = { 
                 prompt_template: t.prompt_template, 
@@ -720,7 +734,7 @@ if (typeof supabase === 'undefined') {
             };
 
             if (generationTemplateInfoDiv) generationTemplateInfoDiv.innerHTML = `<h3>${t.title}</h3><p>${t.description || ''}</p>`;
-            if (generationFieldsFormDiv) { generationFieldsFormDiv.innerHTML = ''; if (f && f.length > 0) f.forEach(field => generationFieldsFormDiv.appendChild(renderGenerationField(field))); else generationFieldsFormDiv.innerHTML = '<p>No input fields.</p>'; }
+            if (generationFieldsFormDiv) { generationFieldsFormDiv.innerHTML = ''; if (f && f.length > 0) f.forEach(field => generationFieldsFormDiv.appendChild(renderGenerationField(field))); else generationFieldsFormDiv.innerHTML = '<p>入力フィールドがありません。</p>'; }
             if (generatedPromptOutputTextarea) generatedPromptOutputTextarea.value = '';
             regenerateDynamicPrompt(); 
             showPromptGenerationSection();
@@ -744,9 +758,9 @@ if (typeof supabase === 'undefined') {
 
         if (copyPromptButton) {
             copyPromptButton.addEventListener('click', async () => {
-                if (!generatedPromptOutputTextarea) return; const text = generatedPromptOutputTextarea.value; if (!text) { alert("Nothing to copy"); return; }
-                if (navigator.clipboard && navigator.clipboard.writeText) { try { await navigator.clipboard.writeText(text); copyPromptButton.textContent = 'Copied!'; setTimeout(() => copyPromptButton.textContent = 'Copy Prompt', 2000); } catch (err) { console.error("Fail copy", err); alert("Fail copy"); } }
-                else { try { generatedPromptOutputTextarea.select(); document.execCommand('copy'); generatedPromptOutputTextarea.blur(); copyPromptButton.textContent = 'Copied!'; setTimeout(() => copyPromptButton.textContent = 'Copy Prompt', 2000); } catch (err) { alert("Fail copy (fallback)"); } }
+                if (!generatedPromptOutputTextarea) return; const text = generatedPromptOutputTextarea.value; if (!text) { alert("コピーするものがありません"); return; }
+                if (navigator.clipboard && navigator.clipboard.writeText) { try { await navigator.clipboard.writeText(text); copyPromptButton.textContent = 'コピーしました！'; setTimeout(() => copyPromptButton.textContent = 'プロンプトをコピー', 2000); } catch (err) { console.error("Fail copy", err); alert("コピーに失敗しました"); } }
+                else { try { generatedPromptOutputTextarea.select(); document.execCommand('copy'); generatedPromptOutputTextarea.blur(); copyPromptButton.textContent = 'コピーしました！'; setTimeout(() => copyPromptButton.textContent = 'プロンプトをコピー', 2000); } catch (err) { alert("コピーに失敗しました（フォールバック）"); } }
             });
         }
         if (backToMyTemplatesButton) { 
@@ -764,30 +778,38 @@ if (typeof supabase === 'undefined') {
 
         function renderPublicTemplates(templatesData) {
             if (!publicTemplatesListDiv) return; publicTemplatesListDiv.innerHTML = '';
-            if (!templatesData || templatesData.length === 0) { publicTemplatesListDiv.innerHTML = '<p>No public templates available at the moment.</p>'; return; }
+            if (!templatesData || templatesData.length === 0) { publicTemplatesListDiv.innerHTML = '<p>現在、公開テンプレートはありません。</p>'; return; }
             const ul = document.createElement('ul'); ul.style.listStyleType = 'none'; ul.style.padding = '0';
+            const fragment = document.createDocumentFragment();
+
             templatesData.forEach(t => {
-                const li = document.createElement('li'); li.style.border = '1px solid #eee'; li.style.padding = '10px'; li.style.marginBottom = '10px';
+                const li = document.createElement('li');
+                // Inline styles here should also be reviewed against CSS from minimal design step
+                li.style.border = '1px solid #eee';
+                li.style.padding = '10px';
+                li.style.marginBottom = '10px';
                 const h4 = document.createElement('h4'); h4.textContent = t.title; li.appendChild(h4);
-                const p = document.createElement('p'); p.textContent = t.description || 'No description.'; li.appendChild(p);
-                const btn = document.createElement('button'); btn.textContent = 'View & Use'; btn.setAttribute('data-template-id', t.id);
+                const p = document.createElement('p'); p.textContent = t.description || '説明なし。'; li.appendChild(p);
+                const btn = document.createElement('button'); btn.textContent = '表示して使用'; btn.setAttribute('data-template-id', t.id);
                 btn.addEventListener('click', () => handleUseTemplate(t.id)); 
-                li.appendChild(btn); ul.appendChild(li);
+                li.appendChild(btn);
+                fragment.appendChild(li);
             });
+            ul.appendChild(fragment);
             publicTemplatesListDiv.appendChild(ul);
         }
 
         async function fetchAndDisplayPublicTemplates() {
             if (!publicTemplatesListDiv || !_supabase) return; 
-            if (!publicTemplatesListDiv.innerHTML || publicTemplatesListDiv.innerHTML.includes('<p>Loading public templates...</p>')) {
-                 publicTemplatesListDiv.innerHTML = '<p>Loading public templates...</p>';
+            if (!publicTemplatesListDiv.innerHTML || publicTemplatesListDiv.innerHTML.includes('<p>公開テンプレートを読み込み中...</p>')) {
+                 publicTemplatesListDiv.innerHTML = '<p>公開テンプレートを読み込み中...</p>';
             }
 
             const { data, error } = await _supabase.from('templates').select('id,title,description,user_id,is_public').eq('is_public', true).order('created_at', { ascending: false });
             if (error) { 
                 console.error("Error fetching public templates:", error); 
-                if (publicTemplatesListDiv.innerHTML.includes('<p>Loading public templates...</p>')) { 
-                     publicTemplatesListDiv.innerHTML = '<p>Error loading public templates. Please try again later.</p>'; 
+                if (publicTemplatesListDiv.innerHTML.includes('<p>公開テンプレートを読み込み中...</p>')) {
+                     publicTemplatesListDiv.innerHTML = '<p>公開テンプレートの読み込み中にエラーが発生しました。後でもう一度お試しください。</p>';
                 }
             }
             else { renderPublicTemplates(data); }
@@ -808,7 +830,7 @@ if (typeof supabase === 'undefined') {
                 if (!_supabase) {
                     console.error("IIFE: Supabase client not initialized. Cannot proceed.");
                     const mainContent = document.querySelector('main');
-                    if (mainContent) mainContent.innerHTML = '<p style="color:red;">Error: Application critical services failed to load in IIFE. Please refresh.</p>';
+                    if (mainContent) mainContent.innerHTML = '<p style="color:red;">エラー: アプリケーションの重要なサービスがIIFEで読み込めませんでした。ページを更新してください。</p>';
                     return;
                 }
 
