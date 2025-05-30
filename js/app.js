@@ -58,6 +58,10 @@ if (typeof supabase === 'undefined') {
         const publicTemplatesSection = document.getElementById('public-templates-section');
         const publicTemplatesListDiv = document.getElementById('public-templates-list');
 
+        // Tooltip Elements
+        const tooltipTrigger = document.getElementById('tooltip-trigger');
+        const syntaxGuideTooltip = document.getElementById('syntax-guide-tooltip');
+
         // State Variables
         let currentEditingTemplateId = null;
         let currentGenerationTemplateData = {
@@ -312,96 +316,109 @@ if (typeof supabase === 'undefined') {
             const fragment = document.createDocumentFragment();
 
             templatesData.forEach(template => {
-                const li = document.createElement('li');
-                li.className = 'template-list-item'; 
-                // Note: Inline styles like these were largely moved to CSS in the "minimal design" step.
-                // If this code is still active and creating these inline styles,
-                // it might override the CSS. This should be ideally harmonized.
-                // For this subtask, I'm focusing on DocumentFragment, not removing existing logic.
-                li.style.border = '1px solid #eee'; // Example: This might be in CSS now
-                li.style.padding = '10px';
-                li.style.marginBottom = '10px';
-                li.style.borderRadius = '4px';
+                const card = document.createElement('div');
+                card.className = 'bg-white shadow-md rounded-lg p-4 mb-4 flex flex-col'; // Removed justify-between to allow natural height
 
                 const titleEl = document.createElement('h4');
+                titleEl.className = 'text-xl font-semibold text-gray-700 mb-2';
                 titleEl.textContent = template.title;
-                titleEl.style.marginTop = '0';
-                li.appendChild(titleEl);
+                card.appendChild(titleEl);
 
                 const descriptionEl = document.createElement('p');
+                descriptionEl.className = 'text-gray-600 text-sm mb-3 flex-grow'; // flex-grow to push actions down
                 descriptionEl.textContent = template.description || '説明なし。';
-                li.appendChild(descriptionEl);
+                card.appendChild(descriptionEl);
+
+                // Placeholder for Tags - assuming template.tags is an array of tag names
+                if (template.tags && template.tags.length > 0) {
+                    const tagsContainer = document.createElement('div');
+                    tagsContainer.className = 'mb-3';
+                    template.tags.forEach(tagName => {
+                        const tagBadge = document.createElement('span');
+                        tagBadge.className = 'inline-block bg-blue-100 text-blue-700 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full';
+                        tagBadge.textContent = tagName;
+                        tagsContainer.appendChild(tagBadge);
+                    });
+                    card.appendChild(tagsContainer);
+                }
 
                 const promptSnippetEl = document.createElement('p');
-                promptSnippetEl.className = 'prompt-snippet';
-                promptSnippetEl.style.fontFamily = 'monospace';
-                promptSnippetEl.style.fontSize = '0.9em';
-                promptSnippetEl.style.color = '#555';
-                promptSnippetEl.textContent = 'プロンプト: ' + (template.prompt_template ? template.prompt_template.substring(0, 70) + '...' : '未設定');
-                li.appendChild(promptSnippetEl);
+                promptSnippetEl.className = 'text-xs text-gray-500 font-mono mb-3 truncate';
+                promptSnippetEl.textContent = 'プロンプト: ' + (template.prompt_template ? template.prompt_template.substring(0, 100) + '...' : '未設定'); // Increased snippet length
+                card.appendChild(promptSnippetEl);
 
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'template-actions';
-                actionsDiv.style.marginTop = "10px";
+                // Sharing status and URL
+                const sharingStatusDiv = document.createElement('div');
+                sharingStatusDiv.className = 'mb-3';
 
-                const editButton = document.createElement('button');
-                editButton.textContent = '編集';
-                editButton.setAttribute('data-template-id', template.id);
-                editButton.style.marginRight = '5px';
-                editButton.addEventListener('click', () => handleEditTemplate(template.id));
-                actionsDiv.appendChild(editButton);
+                const statusText = document.createElement('span');
+                statusText.className = `text-sm font-semibold ${template.is_public ? 'text-green-600' : 'text-red-600'}`;
+                statusText.textContent = template.is_public ? '公開中' : '非公開';
+                sharingStatusDiv.appendChild(statusText);
 
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = '削除';
-                deleteButton.setAttribute('data-template-id', template.id);
-                deleteButton.style.marginRight = '5px';
-                deleteButton.addEventListener('click', () => handleDeleteTemplate(template.id));
-                actionsDiv.appendChild(deleteButton);
+                const shareUrlDisplay = document.createElement('div');
+                shareUrlDisplay.className = 'text-xs text-gray-500 mt-1 break-all';
+                if (template.is_public) {
+                    shareUrlDisplay.textContent = `URL: ${window.location.origin}${window.location.pathname}?template_id=${template.id}`;
+                } else {
+                    shareUrlDisplay.textContent = '共有URLなし (非公開)';
+                }
+                sharingStatusDiv.appendChild(shareUrlDisplay);
+                card.appendChild(sharingStatusDiv);
 
-                const useButton = document.createElement('button');
-                useButton.textContent = '使用';
-                useButton.setAttribute('data-template-id', template.id);
-                useButton.style.marginRight = '5px';
-                useButton.addEventListener('click', () => handleUseTemplate(template.id));
-                actionsDiv.appendChild(useButton);
 
+                // Share Toggle (will be styled later, just structure for now)
                 const shareContainer = document.createElement('div');
-                shareContainer.style.marginTop = '10px';
-                shareContainer.style.display = 'inline-block'; 
+                shareContainer.className = 'mt-2 mb-3 flex items-center'; // Use flex for label and toggle
 
                 const shareLabelText = document.createElement('span');
-                shareLabelText.textContent = '共有: ';
+                shareLabelText.className = 'mr-2 text-sm text-gray-700';
+                shareLabelText.textContent = '共有設定:';
                 shareContainer.appendChild(shareLabelText);
 
                 const shareToggleLabel = document.createElement('label');
-                shareToggleLabel.className = 'share-toggle-label';
+                shareToggleLabel.className = 'share-toggle-label'; // Keep existing class for JS targeting
 
                 const shareCheckbox = document.createElement('input');
                 shareCheckbox.type = 'checkbox';
                 shareCheckbox.checked = template.is_public;
+                shareCheckbox.className = 'form-checkbox h-5 w-5 text-blue-600'; // Basic Tailwind styling for checkbox
 
-                const shareSlider = document.createElement('span');
-                shareSlider.className = 'share-slider';
+                // The visual slider part of the toggle is complex and relies on specific CSS.
+                // For now, let's use a standard checkbox and style it with Tailwind.
+                // The .share-slider can be hidden or removed if not used with new styling.
+                // shareToggleLabel.appendChild(shareCheckbox); // Original had slider too.
+                // For simplicity in this step, just the checkbox. Advanced toggle later.
 
-                shareToggleLabel.appendChild(shareCheckbox);
-                shareToggleLabel.appendChild(shareSlider);
-                shareContainer.appendChild(shareToggleLabel);
-                actionsDiv.appendChild(shareContainer); 
+                const newShareToggleContainer = document.createElement('div'); // Container for new toggle
+                newShareToggleContainer.className = 'relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in';
 
-                const shareUrlDisplay = document.createElement('div');
-                shareUrlDisplay.className = 'share-url-display';
-                shareUrlDisplay.style.display = template.is_public ? 'block' : 'none';
-                shareUrlDisplay.style.marginTop = '5px'; 
-                if (template.is_public) {
-                    shareUrlDisplay.textContent = `URL: ${window.location.origin}${window.location.pathname}?template_id=${template.id}`;
-                }
-                actionsDiv.appendChild(shareUrlDisplay); 
+                const newShareCheckbox = document.createElement('input');
+                newShareCheckbox.type = 'checkbox';
+                newShareCheckbox.checked = template.is_public;
+                newShareCheckbox.name = `share-toggle-${template.id}`;
+                newShareCheckbox.id = `share-toggle-${template.id}`;
+                newShareCheckbox.className = 'form-checkbox hidden'; // Hide default, style custom
 
-                shareCheckbox.addEventListener('change', async (event) => {
+                const newShareToggleVisual = document.createElement('label');
+                newShareToggleVisual.htmlFor = `share-toggle-${template.id}`;
+                newShareToggleVisual.className = `block overflow-hidden h-6 rounded-full cursor-pointer ${template.is_public ? 'bg-blue-500' : 'bg-gray-300'}`;
+
+                newShareToggleContainer.appendChild(newShareCheckbox);
+                newShareToggleContainer.appendChild(newShareToggleVisual);
+
+                shareContainer.appendChild(newShareToggleContainer); // Add new toggle to share container
+
+                newShareCheckbox.addEventListener('change', async (event) => {
                     const newIsPublicState = event.target.checked;
+                    // Update visual state of the custom toggle
+                    newShareToggleVisual.className = `block overflow-hidden h-6 rounded-full cursor-pointer ${newIsPublicState ? 'bg-blue-500' : 'bg-gray-300'}`;
+
                     if (!currentUserId) {
                         alert("ユーザーIDが見つかりません。共有ステータスを変更できません。");
-                        event.target.checked = !newIsPublicState; return;
+                        event.target.checked = !newIsPublicState; // Revert checkbox
+                        newShareToggleVisual.className = `block overflow-hidden h-6 rounded-full cursor-pointer ${!newIsPublicState ? 'bg-blue-500' : 'bg-gray-300'}`; // Revert visual
+                        return;
                     }
 
                     const { error: updateShareError } = await _supabase
@@ -413,24 +430,51 @@ if (typeof supabase === 'undefined') {
                     if (updateShareError) {
                         console.error("Error updating sharing status:", updateShareError);
                         alert("共有ステータスの更新に失敗しました: " + updateShareError.message);
-                        event.target.checked = !newIsPublicState;
+                        event.target.checked = !newIsPublicState; // Revert
+                        newShareToggleVisual.className = `block overflow-hidden h-6 rounded-full cursor-pointer ${!newIsPublicState ? 'bg-blue-500' : 'bg-gray-300'}`; // Revert visual
                     } else {
-                        template.is_public = newIsPublicState;
+                        template.is_public = newIsPublicState; // Update local state
+                        statusText.className = `text-sm font-semibold ${newIsPublicState ? 'text-green-600' : 'text-red-600'}`;
+                        statusText.textContent = newIsPublicState ? '公開中' : '非公開';
                         if (newIsPublicState) {
                             shareUrlDisplay.textContent = `URL: ${window.location.origin}${window.location.pathname}?template_id=${template.id}`;
-                            shareUrlDisplay.style.display = 'block';
                         } else {
-                            shareUrlDisplay.style.display = 'none';
-                            shareUrlDisplay.textContent = '';
+                            shareUrlDisplay.textContent = '共有URLなし (非公開)';
                         }
                     }
                 });
+                card.appendChild(shareContainer);
 
-                li.appendChild(actionsDiv);
-                fragment.appendChild(li);
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'mt-4 pt-4 border-t border-gray-200 flex space-x-2'; // Added border-t for separation
+
+                const useButton = document.createElement('button');
+                useButton.textContent = '使用';
+                useButton.className = 'btn-tailwind bg-green-500 hover:bg-green-600'; // Example Tailwind classes
+                useButton.setAttribute('data-template-id', template.id);
+                useButton.addEventListener('click', () => handleUseTemplate(template.id));
+                actionsDiv.appendChild(useButton);
+
+                const editButton = document.createElement('button');
+                editButton.textContent = '編集';
+                editButton.className = 'btn-tailwind bg-blue-500 hover:bg-blue-600';
+                editButton.setAttribute('data-template-id', template.id);
+                editButton.addEventListener('click', () => handleEditTemplate(template.id));
+                actionsDiv.appendChild(editButton);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '削除';
+                deleteButton.className = 'btn-tailwind bg-red-500 hover:bg-red-600';
+                deleteButton.setAttribute('data-template-id', template.id);
+                deleteButton.addEventListener('click', () => handleDeleteTemplate(template.id));
+                actionsDiv.appendChild(deleteButton);
+
+                card.appendChild(actionsDiv);
+                fragment.appendChild(card); // Changed from li to card (div)
             });
-            ul.appendChild(fragment); // Append all LIs at once to UL
-            templatesListDiv.appendChild(ul); // Append UL to the main list div
+            ul.appendChild(fragment);
+            templatesListDiv.appendChild(ul);
         }
 
         function showTemplateEditorSection(templateDataToEdit = null) {
@@ -629,45 +673,103 @@ if (typeof supabase === 'undefined') {
                 fieldsEditorDiv.innerHTML = '';
             }
 
-            const fieldGroup = document.createElement('div'); fieldGroup.className = 'field-group';
-            fieldGroup.style.border = '1px solid #ddd'; fieldGroup.style.padding = '10px';
-            fieldGroup.style.marginBottom = '10px'; fieldGroup.style.borderRadius = '4px';
+            const fieldGroup = document.createElement('div');
+            fieldGroup.className = 'field-group bg-gray-50 p-4 border border-gray-200 rounded-md mb-4 space-y-3'; // Added space-y-3 for spacing within group
 
-            const idInput = document.createElement('input'); idInput.type = 'hidden'; idInput.className = 'field-id'; idInput.value = fieldData ? fieldData.id : ''; fieldGroup.appendChild(idInput);
+            const idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.className = 'field-id';
+            idInput.value = fieldData ? fieldData.id : '';
+            fieldGroup.appendChild(idInput);
+
+            // Sort Order
             const sortOrderDiv = document.createElement('div');
-            const sortOrderLabel = document.createElement('label'); sortOrderLabel.textContent = '並び順: ';
-            const sortOrderInput = document.createElement('input'); sortOrderInput.type = 'number'; sortOrderInput.className = 'field-sort-order'; sortOrderInput.value = fieldData ? fieldData.sort_order : '0'; sortOrderInput.style.width = '60px';
-            sortOrderLabel.appendChild(sortOrderInput); sortOrderDiv.appendChild(sortOrderLabel); fieldGroup.appendChild(sortOrderDiv);
+            const sortOrderLabel = document.createElement('label');
+            sortOrderLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
+            sortOrderLabel.textContent = '並び順: ';
+            const sortOrderInput = document.createElement('input');
+            sortOrderInput.type = 'number';
+            sortOrderInput.className = 'field-sort-order mt-1 block w-20 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
+            sortOrderInput.value = fieldData ? fieldData.sort_order : '0';
+            sortOrderLabel.appendChild(sortOrderInput);
+            sortOrderDiv.appendChild(sortOrderLabel);
+            fieldGroup.appendChild(sortOrderDiv);
+
+            // Name Input
             const nameDiv = document.createElement('div');
-            const nameLabelEl = document.createElement('label'); nameLabelEl.textContent = '名前（{{variable}}用）: ';
-            const nameInputEl = document.createElement('input'); nameInputEl.type = 'text'; nameInputEl.className = 'field-name'; nameInputEl.required = true; nameInputEl.value = fieldData ? fieldData.name : '';
-            nameLabelEl.appendChild(nameInputEl); nameDiv.appendChild(nameLabelEl); fieldGroup.appendChild(nameDiv);
-            const labelDiv = document.createElement('div');
-            const labelLabelEl = document.createElement('label'); labelLabelEl.textContent = 'ラベル（UI表示）: ';
-            const labelInputEl = document.createElement('input'); labelInputEl.type = 'text'; labelInputEl.className = 'field-label'; labelInputEl.required = true; labelInputEl.value = fieldData ? fieldData.label : '';
-            labelLabelEl.appendChild(labelInputEl); labelDiv.appendChild(labelLabelEl); fieldGroup.appendChild(labelDiv);
+            const nameLabelEl = document.createElement('label');
+            nameLabelEl.className = 'block text-sm font-medium text-gray-700 mb-1';
+            nameLabelEl.textContent = '名前（{{variable}}用）: ';
+            const nameInputEl = document.createElement('input');
+            nameInputEl.type = 'text';
+            nameInputEl.className = 'field-name mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
+            nameInputEl.required = true;
+            nameInputEl.value = fieldData ? fieldData.name : '';
+            nameLabelEl.appendChild(nameInputEl);
+            nameDiv.appendChild(nameLabelEl);
+            fieldGroup.appendChild(nameDiv);
+
+            // Label Input
+            const labelDivElement = document.createElement('div'); // Renamed to avoid conflict with label variable in parent scope
+            const labelLabelEl = document.createElement('label');
+            labelLabelEl.className = 'block text-sm font-medium text-gray-700 mb-1';
+            labelLabelEl.textContent = 'ラベル（UI表示）: ';
+            const labelInputEl = document.createElement('input');
+            labelInputEl.type = 'text';
+            labelInputEl.className = 'field-label mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
+            labelInputEl.required = true;
+            labelInputEl.value = fieldData ? fieldData.label : '';
+            labelLabelEl.appendChild(labelInputEl);
+            labelDivElement.appendChild(labelLabelEl);
+            fieldGroup.appendChild(labelDivElement);
+
+            // Type Select
             const typeDiv = document.createElement('div');
-            const typeLabel = document.createElement('label'); typeLabel.textContent = 'タイプ: ';
-            const typeSelect = document.createElement('select'); typeSelect.className = 'field-type';
+            const typeLabel = document.createElement('label');
+            typeLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
+            typeLabel.textContent = 'タイプ: ';
+            const typeSelect = document.createElement('select');
+            typeSelect.className = 'field-type mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
             ['text', 'select', 'checkbox'].forEach(typeValue => {
-                const option = document.createElement('option'); option.value = typeValue; option.textContent = typeValue.charAt(0).toUpperCase() + typeValue.slice(1);
+                const option = document.createElement('option');
+                option.value = typeValue;
+                option.textContent = typeValue.charAt(0).toUpperCase() + typeValue.slice(1);
                 if (fieldData && fieldData.type === typeValue) option.selected = true;
                 typeSelect.appendChild(option);
             });
-            typeLabel.appendChild(typeSelect); typeDiv.appendChild(typeLabel); fieldGroup.appendChild(typeDiv);
-            const optionsWrapper = document.createElement('div'); optionsWrapper.className = 'field-options-wrapper';
-            const optionsLabel = document.createElement('label'); optionsLabel.textContent = 'オプション（カンマ区切り）: ';
-            const optionsInputEl = document.createElement('input'); optionsInputEl.type = 'text'; optionsInputEl.className = 'field-options';
+            typeLabel.appendChild(typeSelect);
+            typeDiv.appendChild(typeLabel);
+            fieldGroup.appendChild(typeDiv);
+
+            // Options Input (for select type)
+            const optionsWrapper = document.createElement('div');
+            optionsWrapper.className = 'field-options-wrapper space-y-1';
+            const optionsLabel = document.createElement('label');
+            optionsLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
+            optionsLabel.textContent = 'オプション（カンマ区切り）: ';
+            const optionsInputEl = document.createElement('input');
+            optionsInputEl.type = 'text';
+            optionsInputEl.className = 'field-options mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
             if (fieldData && fieldData.type === 'select' && fieldData.options) {
                 optionsInputEl.value = Array.isArray(fieldData.options) ? fieldData.options.join(',') : (fieldData.options || '');
             }
-            optionsLabel.appendChild(optionsInputEl); optionsWrapper.appendChild(optionsLabel); fieldGroup.appendChild(optionsWrapper);
+            optionsLabel.appendChild(optionsInputEl);
+            optionsWrapper.appendChild(optionsLabel);
+            fieldGroup.appendChild(optionsWrapper);
+
             typeSelect.addEventListener('change', () => { optionsWrapper.style.display = typeSelect.value === 'select' ? 'block' : 'none'; });
             if (fieldData && fieldData.type === 'select') optionsWrapper.style.display = 'block'; else optionsWrapper.style.display = 'none';
-            const removeButton = document.createElement('button'); removeButton.type = 'button'; removeButton.textContent = 'フィールドを削除'; removeButton.style.marginTop = '5px';
-            removeButton.addEventListener('click', () => { fieldGroup.remove(); if (fieldsEditorDiv.children.length === 0) fieldsEditorDiv.innerHTML = '<p>まだフィールドが定義されていません。</p>'; });
+
+            // Remove Button
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.textContent = 'フィールドを削除';
+            removeButton.className = 'btn-tailwind bg-red-500 hover:bg-red-600 text-white text-xs py-1 px-2 mt-2'; // Smaller button
+            removeButton.addEventListener('click', () => { fieldGroup.remove(); if (fieldsEditorDiv.children.length === 0) fieldsEditorDiv.innerHTML = '<p class="text-gray-500 text-sm">まだフィールドが定義されていません。</p>'; });
             fieldGroup.appendChild(removeButton);
-            fieldsEditorDiv.appendChild(fieldGroup); return fieldGroup;
+
+            fieldsEditorDiv.appendChild(fieldGroup);
+            return fieldGroup;
         }
 
         if (addFieldButton) { addFieldButton.addEventListener('click', () => renderFieldEditorGroup()); }
@@ -701,20 +803,64 @@ if (typeof supabase === 'undefined') {
         }
 
         function renderGenerationField(field) {
-            const container = document.createElement('div'); container.style.marginBottom = '10px';
-            const label = document.createElement('label'); label.textContent = field.label + ': '; label.style.display = 'block';
-            let input;
-            if (field.type === 'text') { input = document.createElement('input'); input.type = 'text'; }
-            else if (field.type === 'select') { input = document.createElement('select'); if (field.options && Array.isArray(field.options)) field.options.forEach(opt => { const o = document.createElement('option'); o.value = opt; o.textContent = opt; input.appendChild(o); }); }
-            else if (field.type === 'checkbox') { input = document.createElement('input'); input.type = 'checkbox'; input.value = field.label; } 
-            else { input = document.createElement('input'); input.type = 'text'; } 
-            input.id = `gen-field-${field.name}`;
-            label.htmlFor = input.id; // Explicitly link label to input
-            container.appendChild(label); // Add label before input for standard DOM order
+            const container = document.createElement('div');
+            container.className = 'mb-4'; // Tailwind margin bottom
 
-            input.className = 'generation-input-field'; input.setAttribute('data-field-name', field.name);
-            input.addEventListener('input', regenerateDynamicPrompt); input.addEventListener('change', regenerateDynamicPrompt);
-            container.appendChild(input); return container;
+            const label = document.createElement('label');
+            label.className = 'block text-sm font-medium text-gray-700 mb-1';
+            label.textContent = field.label + ': ';
+
+            let input;
+            const inputBaseClasses = 'mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
+
+            if (field.type === 'text') {
+                input = document.createElement('input');
+                input.type = 'text';
+                input.className = inputBaseClasses;
+            } else if (field.type === 'select') {
+                input = document.createElement('select');
+                input.className = inputBaseClasses;
+                if (field.options && Array.isArray(field.options)) {
+                    field.options.forEach(optText => {
+                        const option = document.createElement('option');
+                        option.value = optText;
+                        option.textContent = optText;
+                        input.appendChild(option);
+                    });
+                }
+            } else if (field.type === 'checkbox') {
+                // For checkbox, wrap label and input for better layout
+                container.classList.add('flex', 'items-center');
+                input = document.createElement('input');
+                input.type = 'checkbox';
+                input.value = field.label; // Or field.name if more appropriate
+                input.className = 'form-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded mr-2 focus:ring-indigo-500';
+                // Adjust label to be after checkbox
+                label.className = 'text-sm text-gray-700';
+                label.textContent = field.label; // Just the label text for checkbox
+            } else { // Default to text
+                input = document.createElement('input');
+                input.type = 'text';
+                input.className = inputBaseClasses;
+            }
+
+            input.id = `gen-field-${field.name}`;
+            label.htmlFor = input.id;
+
+            if (field.type === 'checkbox') {
+                container.appendChild(input); // Checkbox first
+                container.appendChild(label); // Then label
+            } else {
+                container.appendChild(label); // Label first
+                container.appendChild(input); // Then input/select
+            }
+
+            input.classList.add('generation-input-field'); // Keep existing class if used by other JS
+            input.setAttribute('data-field-name', field.name);
+            input.addEventListener('input', regenerateDynamicPrompt);
+            input.addEventListener('change', regenerateDynamicPrompt);
+
+            return container;
         }
 
         async function handleUseTemplate(templateId) {
@@ -733,8 +879,20 @@ if (typeof supabase === 'undefined') {
                 is_public: t.is_public
             };
 
-            if (generationTemplateInfoDiv) generationTemplateInfoDiv.innerHTML = `<h3>${t.title}</h3><p>${t.description || ''}</p>`;
-            if (generationFieldsFormDiv) { generationFieldsFormDiv.innerHTML = ''; if (f && f.length > 0) f.forEach(field => generationFieldsFormDiv.appendChild(renderGenerationField(field))); else generationFieldsFormDiv.innerHTML = '<p>入力フィールドがありません。</p>'; }
+            if (generationTemplateInfoDiv) {
+                generationTemplateInfoDiv.innerHTML = `
+                    <h3 class="text-xl font-semibold text-gray-800">${t.title}</h3>
+                    <p class="text-sm text-gray-600 mt-1">${t.description || '説明なし。'}</p>
+                `;
+            }
+            if (generationFieldsFormDiv) {
+                generationFieldsFormDiv.innerHTML = '';
+                if (f && f.length > 0) {
+                    f.forEach(field => generationFieldsFormDiv.appendChild(renderGenerationField(field)));
+                } else {
+                    generationFieldsFormDiv.innerHTML = '<p class="text-gray-500 text-sm">このテンプレートには入力フィールドがありません。</p>';
+                }
+            }
             if (generatedPromptOutputTextarea) generatedPromptOutputTextarea.value = '';
             regenerateDynamicPrompt(); 
             showPromptGenerationSection();
@@ -783,17 +941,39 @@ if (typeof supabase === 'undefined') {
             const fragment = document.createDocumentFragment();
 
             templatesData.forEach(t => {
-                const li = document.createElement('li');
-                // Inline styles here should also be reviewed against CSS from minimal design step
-                li.style.border = '1px solid #eee';
-                li.style.padding = '10px';
-                li.style.marginBottom = '10px';
-                const h4 = document.createElement('h4'); h4.textContent = t.title; li.appendChild(h4);
-                const p = document.createElement('p'); p.textContent = t.description || '説明なし。'; li.appendChild(p);
-                const btn = document.createElement('button'); btn.textContent = '表示して使用'; btn.setAttribute('data-template-id', t.id);
-                btn.addEventListener('click', () => handleUseTemplate(t.id)); 
-                li.appendChild(btn);
-                fragment.appendChild(li);
+                const card = document.createElement('div');
+                card.className = 'bg-white shadow-md rounded-lg p-4 mb-4 flex flex-col';
+
+                const titleEl = document.createElement('h4');
+                titleEl.className = 'text-xl font-semibold text-gray-700 mb-2';
+                titleEl.textContent = t.title;
+                card.appendChild(titleEl);
+
+                const descriptionEl = document.createElement('p');
+                descriptionEl.className = 'text-gray-600 text-sm mb-3 flex-grow';
+                descriptionEl.textContent = t.description || '説明なし。';
+                card.appendChild(descriptionEl);
+
+                // Placeholder for Tags - if public templates might have tags shown
+                // For now, this part is omitted for public templates for simplicity,
+                // but can be added if template objects for public view include tags.
+                // if (t.tags && t.tags.length > 0) { ... }
+
+
+                // Action Button
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'mt-4 pt-4 border-t border-gray-200 flex';
+
+                const useButton = document.createElement('button');
+                useButton.textContent = '表示して使用';
+                // Apply the temporary Tailwind-like button style
+                useButton.className = 'btn-tailwind bg-blue-500 hover:bg-blue-600 w-full'; // Full width for single button
+                useButton.setAttribute('data-template-id', t.id);
+                useButton.addEventListener('click', () => handleUseTemplate(t.id));
+                actionsDiv.appendChild(useButton);
+
+                card.appendChild(actionsDiv);
+                fragment.appendChild(card);
             });
             ul.appendChild(fragment);
             publicTemplatesListDiv.appendChild(ul);
@@ -879,5 +1059,22 @@ if (typeof supabase === 'undefined') {
                 }
             });
         }
+
+        // Tooltip logic
+        if (tooltipTrigger && syntaxGuideTooltip) {
+            tooltipTrigger.addEventListener('click', (event) => {
+                event.stopPropagation(); // Prevent click from immediately being caught by document listener
+                syntaxGuideTooltip.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!syntaxGuideTooltip.classList.contains('hidden') &&
+                    !syntaxGuideTooltip.contains(event.target) &&
+                    event.target !== tooltipTrigger) {
+                    syntaxGuideTooltip.classList.add('hidden');
+                }
+            });
+        }
+
     } // End of else block for Supabase client initialized successfully
 }
