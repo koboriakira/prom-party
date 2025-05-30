@@ -20,11 +20,10 @@
   "homepage": "https://github.com/koboriakira/prom-party#readme",
   "devDependencies": {
     "@playwright/test": "^1.52.0",
-    "@tailwindcss/postcss": "^4.1.8",
     "autoprefixer": "^10.4.21",
     "playwright": "^1.52.0",
     "postcss": "^8.5.4",
     "postcss-cli": "^11.0.1",
-    "tailwindcss": "^4.1.8"
+    "tailwindcss": "^3.4.17"
   }
 }
